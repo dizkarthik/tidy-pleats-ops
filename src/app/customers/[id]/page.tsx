@@ -4,7 +4,11 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
-import { formatReferralKind, formatReferralSource } from "@/lib/referrals";
+import {
+  formatCustomerSize,
+  formatReferralKind,
+  formatReferralSource,
+} from "@/lib/referrals";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +103,7 @@ export default async function CustomerProfilePage({
               label="Birthday date"
               value={formatDate(customer.birthdayDate)}
             />
+            <Detail label="Size" value={formatCustomerSize(customer.size)} />
             <Detail
               label="Referral type"
               value={formatReferralKind(customer.referralKind)}

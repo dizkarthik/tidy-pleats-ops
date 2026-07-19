@@ -21,6 +21,14 @@ enum ReferralKind {
   EXISTING_CUSTOMER
 }
 
+enum CustomerSize {
+  S
+  M
+  L
+  XL
+  XXL
+}
+
 enum UserRole {
   OWNER
   SPOUSE
@@ -57,6 +65,7 @@ model Customer {
   location             String?
   address              String?
   birthdayDate         DateTime?      @db.Date
+  size                 CustomerSize?
   referralKind         ReferralKind
   referralSource       ReferralSource?
   referredByCustomerId String?

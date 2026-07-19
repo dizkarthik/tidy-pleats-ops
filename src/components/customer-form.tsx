@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { Save, Search } from "lucide-react";
 import { createCustomerAction, type ActionState } from "@/lib/actions";
-import { referralKinds, referralSources } from "@/lib/referrals";
+import { customerSizes, referralKinds, referralSources } from "@/lib/referrals";
 
 type ReferralCustomer = {
   id: string;
@@ -24,6 +24,7 @@ type CustomerFormProps = {
     location: string | null;
     address: string | null;
     birthdayDate: Date | null;
+    size: string | null;
     referralKind: string;
     referralSource: string | null;
     referredByCustomerId: string | null;
@@ -137,6 +138,21 @@ export function CustomerForm({
           />
         </label>
       </div>
+
+      <label className="space-y-1.5">
+        <span className="text-sm font-medium text-stone-800">Size</span>
+        <select
+          name="size"
+          defaultValue={customer?.size ?? ""}
+          className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+        >
+          {customerSizes.map((size) => (
+            <option key={size.value || "none"} value={size.value}>
+              {size.label}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label className="space-y-1.5">
         <span className="text-sm font-medium text-stone-800">Address</span>

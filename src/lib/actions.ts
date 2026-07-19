@@ -13,6 +13,7 @@ export type ActionState = {
 
 const referralKindValues = referralKinds.map((kind) => kind.value);
 const referralSourceValues = referralSources.map((source) => source.value);
+const customerSizeValues = ["S", "M", "L", "XL", "XXL"] as const;
 
 const customerSchema = z
   .object({
@@ -21,6 +22,7 @@ const customerSchema = z
     location: z.string().trim().optional(),
     address: z.string().trim().optional(),
     birthdayDate: z.string().trim().optional(),
+    size: z.enum(customerSizeValues).optional(),
     referralKind: z.enum(referralKindValues),
     referralSource: z.enum(referralSourceValues).optional(),
     referredByCustomerId: z.string().trim().optional(),
@@ -63,6 +65,7 @@ function parseCustomerForm(formData: FormData) {
     location: formData.get("location"),
     address: formData.get("address"),
     birthdayDate: formData.get("birthdayDate"),
+    size: formData.get("size") || undefined,
     referralKind: formData.get("referralKind"),
     referralSource: formData.get("referralSource") || undefined,
     referredByCustomerId: formData.get("referredByCustomerId") || undefined,
@@ -77,6 +80,7 @@ function getCustomerData(data: z.infer<typeof customerSchema>) {
     location: optionalText(data.location),
     address: optionalText(data.address),
     birthdayDate: parseBirthday(data.birthdayDate),
+    size: data.size ?? null,
     referralKind: data.referralKind,
     referralSource:
       data.referralKind === "SOCIAL_MEDIA" ? data.referralSource : null,

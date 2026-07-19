@@ -13,6 +13,7 @@ type CustomerListItem = {
 
 type CustomerListProps = {
   customers: CustomerListItem[];
+  initialQuery?: string;
 };
 
 function matchesNameStart(customerName: string, query: string) {
@@ -29,8 +30,8 @@ function matchesNameStart(customerName: string, query: string) {
     .some((namePart) => namePart.startsWith(normalizedQuery));
 }
 
-export function CustomerList({ customers }: CustomerListProps) {
-  const [query, setQuery] = useState("");
+export function CustomerList({ customers, initialQuery = "" }: CustomerListProps) {
+  const [query, setQuery] = useState(initialQuery);
   const filteredCustomers = customers.filter((customer) =>
     matchesNameStart(customer.name, query),
   );

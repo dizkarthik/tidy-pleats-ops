@@ -12,8 +12,18 @@ export const referralKinds = [
   { value: "EXISTING_CUSTOMER", label: "Existing customer" },
 ] as const;
 
+export const customerSizes = [
+  { value: "", label: "Not set" },
+  { value: "S", label: "S" },
+  { value: "M", label: "M" },
+  { value: "L", label: "L" },
+  { value: "XL", label: "XL" },
+  { value: "XXL", label: "XXL" },
+] as const;
+
 export type ReferralSourceValue = (typeof referralSources)[number]["value"];
 export type ReferralKindValue = (typeof referralKinds)[number]["value"];
+export type CustomerSizeValue = Exclude<(typeof customerSizes)[number]["value"], "">;
 
 export function formatReferralSource(value?: string | null) {
   return referralSources.find((source) => source.value === value)?.label ?? "Not set";
@@ -21,4 +31,8 @@ export function formatReferralSource(value?: string | null) {
 
 export function formatReferralKind(value?: string | null) {
   return referralKinds.find((kind) => kind.value === value)?.label ?? "Not set";
+}
+
+export function formatCustomerSize(value?: string | null) {
+  return customerSizes.find((size) => size.value === value)?.label ?? "Not set";
 }

@@ -8,7 +8,7 @@ import { getPrisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 type CustomersPageProps = {
-  searchParams: Promise<{ letter?: string }>;
+  searchParams: Promise<{ letter?: string; q?: string }>;
 };
 
 const alphabetFilters = ["All", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
@@ -29,6 +29,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const user = await requireUser();
   const params = await searchParams;
   const requestedLetter = params.letter?.trim().toUpperCase() ?? "All";
+  const initialQuery = params.q?.trim() ?? "";
   const selectedLetter = alphabetFilters.includes(requestedLetter)
     ? requestedLetter
     : "All";
@@ -96,7 +97,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
           })}
         </div>
 
-        <CustomerList customers={customers} />
+        <CustomerList customers={customers} initialQuery={initialQuery} />
       </main>
     </>
   );

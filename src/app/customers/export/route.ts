@@ -1,7 +1,11 @@
 import ExcelJS from "exceljs";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
-import { formatReferralKind, formatReferralSource } from "@/lib/referrals";
+import {
+  formatCustomerSize,
+  formatReferralKind,
+  formatReferralSource,
+} from "@/lib/referrals";
 
 export const runtime = "nodejs";
 
@@ -41,6 +45,7 @@ export async function GET() {
     { header: "Location", key: "location", width: 22 },
     { header: "Address", key: "address", width: 36 },
     { header: "Birthday Date", key: "birthdayDate", width: 16 },
+    { header: "Size", key: "size", width: 12 },
     { header: "Referral Type", key: "referralKind", width: 22 },
     { header: "Referral Source", key: "referralSource", width: 22 },
     { header: "Referred By Customer", key: "referredByCustomer", width: 30 },
@@ -57,6 +62,7 @@ export async function GET() {
       location: customer.location ?? "",
       address: customer.address ?? "",
       birthdayDate: formatDate(customer.birthdayDate),
+      size: formatCustomerSize(customer.size),
       referralKind: formatReferralKind(customer.referralKind),
       referralSource: formatReferralSource(customer.referralSource),
       referredByCustomer: customer.referredByCustomer
