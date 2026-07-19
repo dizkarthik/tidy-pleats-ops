@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
+  ClipboardPlus,
   CreditCard,
   List,
   PackageSearch,
   Plus,
   ReceiptText,
+  UserPlus,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -23,7 +27,30 @@ function isActive(pathname: string, href: string) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
   const [customers, orders, payments, menu5] = navItems;
+
+  useEffect(() => {
+    setIsActionMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsActionMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, []);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-10px_30px_rgba(28,25,23,0.08)] backdrop-blur">
@@ -46,14 +73,43 @@ export function BottomNav() {
           );
         })}
 
-        <Link
-          href="/customers/new"
-          className="mx-auto flex h-16 w-16 -translate-y-3 items-center justify-center rounded-full bg-teal-700 text-white shadow-lg shadow-teal-900/25 ring-4 ring-white hover:bg-teal-800"
-          aria-label="Add customer"
-          title="Add customer"
-        >
-          <Plus aria-hidden="true" className="h-8 w-8" />
-        </Link>
+        <div ref={actionMenuRef} className="relative mx-auto">
+          {isActionMenuOpen ? (
+            <div className="absolute bottom-20 left-1/2 w-48 -translate-x-1/2 overflow-hidden rounded-md border border-stone-200 bg-white shadow-xl shadow-stone-950/15">
+              <Link
+                href="/customers/new"
+                className="flex min-h-12 items-center gap-3 border-b border-stone-100 px-3 text-sm font-semibold text-stone-800 hover:bg-stone-50"
+              >
+                <UserPlus aria-hidden="true" className="h-5 w-5 text-teal-700" />
+                Add Customer
+              </Link>
+              <Link
+                href="/orders/new"
+                className="flex min-h-12 items-center gap-3 px-3 text-sm font-semibold text-stone-800 hover:bg-stone-50"
+              >
+                <ClipboardPlus
+                  aria-hidden="true"
+                  className="h-5 w-5 text-teal-700"
+                />
+                New Order
+              </Link>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setIsActionMenuOpen((isOpen) => !isOpen)}
+            className="flex h-16 w-16 -translate-y-3 items-center justify-center rounded-full bg-teal-700 text-white shadow-lg shadow-teal-900/25 ring-4 ring-white hover:bg-teal-800"
+            aria-label={isActionMenuOpen ? "Close actions" : "Open actions"}
+            aria-expanded={isActionMenuOpen}
+            title={isActionMenuOpen ? "Close" : "Add"}
+          >
+            {isActionMenuOpen ? (
+              <X aria-hidden="true" className="h-8 w-8" />
+            ) : (
+              <Plus aria-hidden="true" className="h-8 w-8" />
+            )}
+          </button>
+        </div>
 
         {[payments, menu5].map((item) => {
           const Icon = item.icon;
