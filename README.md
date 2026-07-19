@@ -2,12 +2,15 @@
 
 Internal operations app for Tidy Pleats, a home-based saree pre-pleating service in Virudhunagar, Tamil Nadu.
 
-Phase 1 contains only Customer Contact Management:
+The app currently contains Customer Contact Management and Order Management:
 
 - Credential login for two seeded internal users.
 - Add customer records with normalized referral tracking.
 - Searchable customer list by name, phone number, or location.
 - Customer profile view with notes and date added.
+- Create single or multi-saree orders linked to existing customers.
+- Track needed-by date, pickup/drop, saree pleat counts, damage notes, photos, price, discounts, advance paid, and balance due.
+- Search and filter the order list, then open full order details.
 - Mobile-first PWA setup with manifest, icons, and service worker.
 
 ## Tech Stack
@@ -27,6 +30,7 @@ Copy `.env.example` to `.env` for local development.
 ```bash
 DATABASE_URL="postgresql://karthik@localhost:5432/tidy_pleats_ops?schema=public"
 SESSION_COOKIE_NAME="tidy_pleats_ops_session"
+BLOB_READ_WRITE_TOKEN="vercel-blob-read-write-token"
 ```
 
 Optional seed overrides:
@@ -71,6 +75,10 @@ npx prisma studio
 ```
 
 The `Customer.referredByCustomerId` field is a self-referencing foreign key instead of free text. This prevents duplicate or typo-filled referral names and preserves accurate referral counts for later phases.
+
+Orders use a single `orders` + `order_items` schema for both Single and Multi order flows. A Single order is one order item with `deliveryType` set to `ONE_TIME`, which keeps reports and later status workflows consistent. Needed-by, pickup/drop, and address are always stored on each `order_items` row; when the UI asks for common delivery details once, those values are copied into every item.
+
+Saree photos are uploaded to Vercel Blob through `BLOB_READ_WRITE_TOKEN`; only the Blob URL is saved in Postgres.
 
 ## Deployment
 

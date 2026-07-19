@@ -34,6 +34,33 @@ enum UserRole {
   SPOUSE
 }
 
+enum OrderType {
+  SINGLE
+  MULTI
+}
+
+enum DeliveryType {
+  ONE_TIME
+  MULTIPLE
+}
+
+enum DiscountType {
+  PERCENT
+  RUPEE
+}
+
+enum AdvancePaymentMethod {
+  CASH
+  UPI
+}
+
+enum PickupDrop {
+  NO
+  PICKUP
+  DROP
+  PICKUP_AND_DROP
+}
+
 model User {
   id           String    @id @default(cuid())
   name         String
@@ -71,6 +98,7 @@ model Customer {
   referredByCustomerId String?
   notes                String?
   dateAdded            DateTime       @default(now())
+  orders               Order[]
 
   // Referred-by is a linked customer record, not free text, so referral counts
   // remain accurate and typo-proof in later order/offer phases.
@@ -82,4 +110,55 @@ model Customer {
   @@index([location])
   @@index([referredByCustomerId])
   @@map("customers")
+}
+
+model Order {
+  id                   Int                  @id @default(autoincrement())
+  customerId           String
+  orderDate            DateTime             @default(now())
+  orderType            OrderType
+  deliveryType         DeliveryType
+  discountValue        Decimal              @default(0) @db.Decimal(10, 2)
+  discountType         DiscountType         @default(RUPEE)
+  advancePaid          Decimal              @default(0) @db.Decimal(10, 2)
+  advancePaymentMethod AdvancePaymentMethod @default(CASH)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  // Single and Multi orders share one schema. Single is simply one item with
+  // deliveryType stored as ONE_TIME, which keeps later reporting consistent.
+  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items    OrderItem[]
+
+  @@index([customerId])
+  @@index([orderDate])
+  @@index([orderType])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String     @id @default(cuid())
+  orderId            Int
+  sareeNumber        Int
+  palluPleats        Int
+  centerPleats       Int
+  photoUrl           String?
+  sareeNotes         String?
+  damageNoticed      Boolean    @default(false)
+  damageNotes        String?
+  informedToCustomer Boolean    @default(false)
+  price              Decimal    @db.Decimal(10, 2)
+  neededBy           DateTime   @db.Date
+  pickupDrop         PickupDrop @default(NO)
+  address            String?
+
+  // Needed-by, pickup/drop, and address are always stored per item. For
+  // one-time delivery the form collects them once and copies them to each item,
+  // so the data stays accurate if an order later changes to multiple delivery.
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, sareeNumber])
+  @@index([neededBy])
+  @@index([pickupDrop])
+  @@map("order_items")
 }
