@@ -8,38 +8,15 @@ import { getPrisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 type CustomersPageProps = {
-  searchParams: Promise<{ letter?: string; q?: string }>;
+  searchParams: Promise<{ q?: string }>;
 };
-
-const alphabetFilters = ["All", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
-
-function getCustomersHref(letter: string) {
-  const params = new URLSearchParams();
-
-  if (letter !== "All") {
-    params.set("letter", letter);
-  }
-
-  const search = params.toString();
-
-  return `/customers${search ? `?${search}` : ""}`;
-}
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const user = await requireUser();
   const params = await searchParams;
-  const requestedLetter = params.letter?.trim().toUpperCase() ?? "All";
   const initialQuery = params.q?.trim() ?? "";
-  const selectedLetter = alphabetFilters.includes(requestedLetter)
-    ? requestedLetter
-    : "All";
 
   const customers = await getPrisma().customer.findMany({
-    where: {
-      ...(selectedLetter !== "All"
-        ? { name: { startsWith: selectedLetter, mode: "insensitive" } }
-        : {}),
-    },
     orderBy: [{ name: "asc" }, { dateAdded: "desc" }],
     take: 100,
   });
@@ -51,11 +28,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-stone-950">Customers</h1>
-            <p className="text-sm text-stone-600">
-              {selectedLetter === "All"
-                ? "All customers"
-                : `${selectedLetter} customers`}
-            </p>
+            <p className="text-sm text-stone-600">All customers</p>
           </div>
           <div className="flex items-center gap-2">
             <Link
@@ -72,29 +45,6 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               Add
             </Link>
           </div>
-        </div>
-
-        <div
-          className="mb-4 flex gap-2 overflow-x-auto pb-1"
-          aria-label="Filter customers by first letter"
-        >
-          {alphabetFilters.map((letter) => {
-            const isSelected = selectedLetter === letter;
-
-            return (
-              <Link
-                key={letter}
-                href={getCustomersHref(letter)}
-                className={`flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm font-bold ${
-                  isSelected
-                    ? "border-teal-700 bg-teal-700 text-white"
-                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
-                }`}
-              >
-                {letter}
-              </Link>
-            );
-          })}
         </div>
 
         <CustomerList customers={customers} initialQuery={initialQuery} />
