@@ -7,25 +7,54 @@ import { getPrisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 type CustomersPageProps = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ letter?: string; q?: string }>;
 };
+
+const alphabetFilters = ["All", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
+
+function getCustomersHref(letter: string, query: string) {
+  const params = new URLSearchParams();
+
+  if (query) {
+    params.set("q", query);
+  }
+
+  if (letter !== "All") {
+    params.set("letter", letter);
+  }
+
+  const search = params.toString();
+
+  return `/customers${search ? `?${search}` : ""}`;
+}
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const user = await requireUser();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
+  const requestedLetter = params.letter?.trim().toUpperCase() ?? "All";
+  const selectedLetter = alphabetFilters.includes(requestedLetter)
+    ? requestedLetter
+    : "All";
 
   const customers = await getPrisma().customer.findMany({
-    where: query
-      ? {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { phoneNumber: { contains: query, mode: "insensitive" } },
-            { location: { contains: query, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
-    orderBy: { dateAdded: "desc" },
+    where: {
+      AND: [
+        query
+          ? {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { phoneNumber: { contains: query, mode: "insensitive" } },
+                { location: { contains: query, mode: "insensitive" } },
+              ],
+            }
+          : {},
+        selectedLetter !== "All"
+          ? { name: { startsWith: selectedLetter, mode: "insensitive" } }
+          : {},
+      ],
+    },
+    orderBy: [{ name: "asc" }, { dateAdded: "desc" }],
     take: 100,
   });
 
@@ -47,6 +76,9 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         </div>
 
         <form className="mb-4">
+          {selectedLetter !== "All" ? (
+            <input type="hidden" name="letter" value={selectedLetter} />
+          ) : null}
           <label className="relative block">
             <Search
               aria-hidden="true"
@@ -60,6 +92,29 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             />
           </label>
         </form>
+
+        <div
+          className="mb-4 flex gap-2 overflow-x-auto pb-1"
+          aria-label="Filter customers by first letter"
+        >
+          {alphabetFilters.map((letter) => {
+            const isSelected = selectedLetter === letter;
+
+            return (
+              <Link
+                key={letter}
+                href={getCustomersHref(letter, query)}
+                className={`flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm font-bold ${
+                  isSelected
+                    ? "border-teal-700 bg-teal-700 text-white"
+                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                }`}
+              >
+                {letter}
+              </Link>
+            );
+          })}
+        </div>
 
         <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
           {customers.length > 0 ? (
