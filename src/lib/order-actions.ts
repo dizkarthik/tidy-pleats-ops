@@ -16,18 +16,24 @@ const discountTypeValues = ["RUPEE", "PERCENT"] as const;
 const advancePaymentMethodValues = ["CASH", "UPI"] as const;
 const pickupDropValues = ["NO", "PICKUP", "DROP", "PICKUP_AND_DROP"] as const;
 
+function blankToUndefined(value: unknown) {
+  return typeof value === "string" && value.trim().length === 0
+    ? undefined
+    : value;
+}
+
 const orderItemSchema = z.object({
   palluPleats: z.coerce.number().int().min(0),
   centerPleats: z.coerce.number().int().min(0),
-  photoUrl: z.string().trim().url().optional(),
-  sareeNotes: z.string().trim().optional(),
+  photoUrl: z.preprocess(blankToUndefined, z.string().trim().url().optional()),
+  sareeNotes: z.preprocess(blankToUndefined, z.string().trim().optional()),
   damageNoticed: z.boolean().default(false),
-  damageNotes: z.string().trim().optional(),
+  damageNotes: z.preprocess(blankToUndefined, z.string().trim().optional()),
   informedToCustomer: z.boolean().default(false),
   price: z.coerce.number().min(0.01, "Enter the saree price."),
   neededBy: z.string().trim().min(1, "Needed-by date is required."),
   pickupDrop: z.enum(pickupDropValues),
-  address: z.string().trim().optional(),
+  address: z.preprocess(blankToUndefined, z.string().trim().optional()),
 });
 
 const orderSchema = z
@@ -167,4 +173,3 @@ export async function createOrderAction(
   revalidatePath("/orders");
   redirect(`/orders/${orderId}`);
 }
-
