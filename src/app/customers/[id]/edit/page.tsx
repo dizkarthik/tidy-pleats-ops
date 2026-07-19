@@ -46,8 +46,8 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           Customer profile
         </Link>
-        <div className="rounded-md border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-          <h1 className="mb-5 text-2xl font-semibold text-stone-950">
+        <div className="rounded-md border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
+          <h1 className="mb-7 text-2xl font-semibold text-stone-950">
             Edit customer
           </h1>
           <CustomerForm

@@ -272,23 +272,23 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
 
   return (
     <>
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className="space-y-8">
         <input type="hidden" name="customerId" value={selectedCustomerId} />
         <input type="hidden" name="orderType" value={orderType} />
         <input type="hidden" name="deliveryType" value={deliveryType} />
         <input type="hidden" name="items" value={JSON.stringify(formItems)} />
 
         {state.error ? (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
             {state.error}
           </div>
         ) : null}
 
-        <fieldset className="space-y-2">
+        <fieldset className="space-y-3">
           <legend className="text-sm font-medium text-stone-800">
             Order Type
           </legend>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {[
               { value: "SINGLE", label: "Single" },
               { value: "MULTI", label: "Multi" },
@@ -310,7 +310,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
         </fieldset>
 
         {orderType === "MULTI" ? (
-          <label className="space-y-1.5">
+          <label className="space-y-2">
             <span className="text-sm font-medium text-stone-800">
               Delivery Type
             </span>
@@ -328,7 +328,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
           </label>
         ) : null}
 
-        <label className="space-y-1.5">
+        <label className="space-y-2">
           <span className="text-sm font-medium text-stone-800">
             Order Date & Time
           </span>
@@ -340,9 +340,9 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
           />
         </label>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <label className="flex-1 space-y-1.5">
+            <label className="flex-1 space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Customer
               </span>
@@ -420,7 +420,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
         </div>
 
         {isOneTime ? (
-          <section className="space-y-3 rounded-md border border-stone-200 bg-white p-3">
+          <section className="space-y-5 rounded-md border border-stone-200 bg-white p-4 sm:p-5">
             <h2 className="text-sm font-bold text-stone-900">
               Common delivery
             </h2>
@@ -440,7 +440,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
           </section>
         ) : null}
 
-        <section className="space-y-3">
+        <section className="space-y-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-stone-950">Sarees</h2>
             {orderType === "MULTI" ? (
@@ -467,7 +467,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
           {items.map((item, index) => (
             <div
               key={index}
-              className="space-y-4 rounded-md border border-stone-200 bg-white p-3"
+              className="space-y-6 rounded-md border border-stone-200 bg-white p-4 sm:p-5"
             >
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-bold text-stone-900">
@@ -489,7 +489,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 ) : null}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <Stepper
                   label="Pallu Pleats"
                   value={item.palluPleats}
@@ -504,7 +504,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 />
               </div>
 
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">
                   Saree Photo
                 </span>
@@ -529,7 +529,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 </span>
               </label>
 
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">Price</span>
                 <input
                   value={item.price}
@@ -559,7 +559,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 />
               ) : null}
 
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">
                   Saree Notes
                 </span>
@@ -592,8 +592,8 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
               </label>
 
               {item.damageNoticed ? (
-                <div className="space-y-3">
-                  <label className="space-y-1.5">
+                <div className="space-y-4">
+                  <label className="space-y-2">
                     <span className="text-sm font-medium text-stone-800">
                       Damage Notes
                     </span>
@@ -625,10 +625,10 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
           ))}
         </section>
 
-        <section className="space-y-3 rounded-md border border-stone-200 bg-white p-3">
+        <section className="space-y-5 rounded-md border border-stone-200 bg-white p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-stone-950">Payment</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1.5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Discount
               </span>
@@ -640,7 +640,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
               />
             </label>
-            <label className="space-y-1.5">
+            <label className="space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Discount Type
               </span>
@@ -659,8 +659,8 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
             </label>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1.5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Advance Paid
               </span>
@@ -672,7 +672,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
               />
             </label>
-            <label className="space-y-1.5">
+            <label className="space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Payment Method
               </span>
@@ -690,7 +690,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
             </label>
           </div>
 
-          <div className="grid gap-2 text-sm sm:grid-cols-3">
+          <div className="grid gap-3 text-sm sm:grid-cols-3">
             <SummaryTile label="Total Price" value={formatCurrency(totalPrice)} />
             <SummaryTile
               label="Discount"
@@ -729,13 +729,13 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
             </div>
-            <form onSubmit={handleQuickCustomerSubmit} className="space-y-4">
+            <form onSubmit={handleQuickCustomerSubmit} className="space-y-6">
               {quickCustomerError ? (
-                <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
                   {quickCustomerError}
                 </div>
               ) : null}
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">
                   Customer name
                 </span>
@@ -745,7 +745,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                   className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
                 />
               </label>
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">
                   Phone number
                 </span>
@@ -756,7 +756,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                   className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
                 />
               </label>
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">
                   Location
                 </span>
@@ -765,7 +765,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                   className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
                 />
               </label>
-              <label className="space-y-1.5">
+              <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">
                   Address
                 </span>
@@ -799,7 +799,7 @@ function Stepper({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <p className="text-sm font-medium text-stone-800">{label}</p>
       <div className="grid h-11 grid-cols-[2.75rem_1fr_2.75rem] overflow-hidden rounded-md border border-stone-300 bg-white">
         <button
@@ -838,8 +838,8 @@ function DeliveryFields({
   onChange: (next: Partial<Pick<OrderItemDraft, "neededBy" | "pickupDrop" | "address">>) => void;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <label className="space-y-1.5">
+    <div className="grid gap-5 sm:grid-cols-2">
+      <label className="space-y-2">
         <span className="text-sm font-medium text-stone-800">Needed By</span>
         <input
           type="date"
@@ -848,7 +848,7 @@ function DeliveryFields({
           className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
         />
       </label>
-      <label className="space-y-1.5">
+      <label className="space-y-2">
         <span className="text-sm font-medium text-stone-800">
           Pickup and Drop
         </span>
@@ -865,7 +865,7 @@ function DeliveryFields({
         </select>
       </label>
       {pickupDrop !== "NO" ? (
-        <label className="space-y-1.5 sm:col-span-2">
+        <label className="space-y-2 sm:col-span-2">
           <span className="text-sm font-medium text-stone-800">Address</span>
           <textarea
             value={address}

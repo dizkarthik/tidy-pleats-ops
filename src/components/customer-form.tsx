@@ -85,17 +85,17 @@ export function CustomerForm({
   }, [customerQuery, referralCustomers]);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-7">
       {customer ? <input type="hidden" name="customerId" value={customer.id} /> : null}
 
       {state.error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
           {state.error}
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-1.5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className="space-y-2">
           <span className="text-sm font-medium text-stone-800">Customer name</span>
           <input
             name="name"
@@ -105,7 +105,7 @@ export function CustomerForm({
           />
         </label>
 
-        <label className="space-y-1.5">
+        <label className="space-y-2">
           <span className="text-sm font-medium text-stone-800">Phone number</span>
           <input
             name="phoneNumber"
@@ -117,8 +117,8 @@ export function CustomerForm({
         </label>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-1.5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className="space-y-2">
           <span className="text-sm font-medium text-stone-800">Location</span>
           <input
             name="location"
@@ -128,7 +128,7 @@ export function CustomerForm({
           />
         </label>
 
-        <label className="space-y-1.5">
+        <label className="space-y-2">
           <span className="text-sm font-medium text-stone-800">Birthday date</span>
           <input
             name="birthdayDate"
@@ -139,7 +139,7 @@ export function CustomerForm({
         </label>
       </div>
 
-      <label className="space-y-1.5">
+      <label className="space-y-2">
         <span className="text-sm font-medium text-stone-800">Size</span>
         <select
           name="size"
@@ -154,7 +154,7 @@ export function CustomerForm({
         </select>
       </label>
 
-      <label className="space-y-1.5">
+      <label className="space-y-2">
         <span className="text-sm font-medium text-stone-800">Address</span>
         <textarea
           name="address"
@@ -164,9 +164,9 @@ export function CustomerForm({
         />
       </label>
 
-      <fieldset className="space-y-3">
+      <fieldset className="space-y-4">
         <legend className="text-sm font-medium text-stone-800">Referred by</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {referralKinds.map((kind) => (
             <label
               key={kind.value}
@@ -187,7 +187,7 @@ export function CustomerForm({
       </fieldset>
 
       {referralKind === "SOCIAL_MEDIA" ? (
-        <label className="space-y-1.5">
+        <label className="space-y-2">
           <span className="text-sm font-medium text-stone-800">Referral source</span>
           <select
             name="referralSource"
@@ -202,13 +202,13 @@ export function CustomerForm({
           </select>
         </label>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <input
             type="hidden"
             name="referredByCustomerId"
             value={selectedCustomerId}
           />
-          <label className="space-y-1.5">
+          <label className="space-y-2">
             <span className="text-sm font-medium text-stone-800">
               Search existing customers
             </span>
@@ -281,7 +281,7 @@ export function CustomerForm({
         </div>
       )}
 
-      <label className="space-y-1.5">
+      <label className="space-y-2">
         <span className="text-sm font-medium text-stone-800">Notes</span>
         <textarea
           name="notes"
