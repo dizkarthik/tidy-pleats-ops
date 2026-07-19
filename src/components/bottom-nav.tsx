@@ -6,19 +6,19 @@ import { useEffect, useRef, useState } from "react";
 import {
   ClipboardPlus,
   CreditCard,
+  LayoutDashboard,
   List,
   PackageSearch,
   Plus,
-  ReceiptText,
   UserPlus,
   X,
 } from "lucide-react";
 
 const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/customers", label: "Customers", icon: List },
   { href: "/orders", label: "Orders", icon: PackageSearch },
   { href: "/payments", label: "Payments", icon: CreditCard },
-  { href: "/menu5", label: "Menu5", icon: ReceiptText },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -29,7 +29,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const actionMenuRef = useRef<HTMLDivElement>(null);
-  const [customers, orders, payments, menu5] = navItems;
+  const [dashboard, customers, orders, payments] = navItems;
 
   useEffect(() => {
     setIsActionMenuOpen(false);
@@ -55,7 +55,7 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-10px_30px_rgba(28,25,23,0.08)] backdrop-blur">
       <div className="mx-auto grid max-w-5xl grid-cols-5 items-end gap-1">
-        {[customers, orders].map((item) => {
+        {[dashboard, customers].map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
 
@@ -111,7 +111,7 @@ export function BottomNav() {
           </button>
         </div>
 
-        {[payments, menu5].map((item) => {
+        {[orders, payments].map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
 
