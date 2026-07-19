@@ -17,6 +17,7 @@
 /.next/
 /out/
 /src/generated/prisma/
+/.pglite-data/
 
 # production
 /build

@@ -25,7 +25,7 @@ Phase 1 contains only Customer Contact Management:
 Copy `.env.example` to `.env` for local development.
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/tidy_pleats_ops?schema=public"
+DATABASE_URL="postgresql://karthik@localhost:5432/tidy_pleats_ops?schema=public"
 SESSION_COOKIE_NAME="tidy_pleats_ops_session"
 ```
 

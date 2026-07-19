@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../src/generated/prisma/client.js";
+import { randomUUID } from "crypto";
+import pg from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -8,9 +8,7 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required to seed tidy-pleats-ops.");
 }
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: databaseUrl }),
-});
+const client = new pg.Client({ connectionString: databaseUrl });
 
 const users = [
   {
@@ -27,23 +25,23 @@ const users = [
   },
 ];
 
+await client.connect();
+
 for (const user of users) {
   const passwordHash = await bcrypt.hash(user.password, 12);
 
-  await prisma.user.upsert({
-    where: { username: user.username },
-    update: {
-      name: user.name,
-      role: user.role,
-      passwordHash,
-    },
-    create: {
-      name: user.name,
-      username: user.username,
-      role: user.role,
-      passwordHash,
-    },
-  });
+  await client.query(
+    `
+      INSERT INTO users (id, name, username, "passwordHash", role, "createdAt")
+      VALUES ($1, $2, $3, $4, $5::"UserRole", CURRENT_TIMESTAMP)
+      ON CONFLICT (username)
+      DO UPDATE SET
+        name = EXCLUDED.name,
+        "passwordHash" = EXCLUDED."passwordHash",
+        role = EXCLUDED.role
+    `,
+    [randomUUID(), user.name, user.username, passwordHash, user.role],
+  );
 }
 
-await prisma.$disconnect();
+await client.end();
