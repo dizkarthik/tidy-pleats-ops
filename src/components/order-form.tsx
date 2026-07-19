@@ -14,7 +14,6 @@ import {
   type OrderActionState,
 } from "@/lib/order-actions";
 import {
-  advancePaymentMethods,
   calculateBalanceDue,
   calculateDiscountAmount,
   deliveryTypes,
@@ -134,7 +133,6 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
   ]);
   const [discountValue, setDiscountValue] = useState("0");
   const [discountType, setDiscountType] = useState("RUPEE");
-  const [advancePaid, setAdvancePaid] = useState("0");
   const [uploadingItemIndex, setUploadingItemIndex] = useState<number | null>(
     null,
   );
@@ -172,7 +170,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
     totalPrice,
     discountValue: Number(discountValue) || 0,
     discountType,
-    advancePaid: Number(advancePaid) || 0,
+    totalPaid: 0,
   });
   const formItems = items.map((item) => ({
     ...item,
@@ -629,37 +627,6 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 ))}
               </div>
             </div>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-stone-800">
-                Advance Paid
-              </span>
-              <input
-                name="advancePaid"
-                value={advancePaid}
-                onChange={(event) => setAdvancePaid(event.target.value)}
-                inputMode="decimal"
-                className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-stone-800">
-                Payment Method
-              </span>
-              <select
-                name="advancePaymentMethod"
-                defaultValue="CASH"
-                className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              >
-                {advancePaymentMethods.map((method) => (
-                  <option key={method.value} value={method.value}>
-                    {method.label}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
 
           <div className="grid gap-3 text-sm sm:grid-cols-3">

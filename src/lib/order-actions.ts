@@ -13,7 +13,6 @@ export type OrderActionState = {
 const orderTypeValues = ["SINGLE", "MULTI"] as const;
 const deliveryTypeValues = ["ONE_TIME", "MULTIPLE"] as const;
 const discountTypeValues = ["RUPEE", "PERCENT"] as const;
-const advancePaymentMethodValues = ["CASH", "UPI"] as const;
 const pickupDropValues = ["NO", "PICKUP", "DROP", "PICKUP_AND_DROP"] as const;
 
 function blankToUndefined(value: unknown) {
@@ -44,8 +43,6 @@ const orderSchema = z
     deliveryType: z.enum(deliveryTypeValues),
     discountValue: z.coerce.number().min(0).default(0),
     discountType: z.enum(discountTypeValues),
-    advancePaid: z.coerce.number().min(0).default(0),
-    advancePaymentMethod: z.enum(advancePaymentMethodValues),
     items: z.array(orderItemSchema).min(1, "Add at least one saree."),
   })
   .superRefine((data, context) => {
@@ -110,8 +107,6 @@ export async function createOrderAction(
     deliveryType: formData.get("deliveryType"),
     discountValue: formData.get("discountValue") || 0,
     discountType: formData.get("discountType"),
-    advancePaid: formData.get("advancePaid") || 0,
-    advancePaymentMethod: formData.get("advancePaymentMethod"),
     items: parsedItems,
   });
 
@@ -140,8 +135,6 @@ export async function createOrderAction(
         deliveryType: data.orderType === "SINGLE" ? "ONE_TIME" : data.deliveryType,
         discountValue: data.discountValue.toFixed(2),
         discountType: data.discountType,
-        advancePaid: data.advancePaid.toFixed(2),
-        advancePaymentMethod: data.advancePaymentMethod,
         items: {
           create: data.items.map((item, index) => ({
             sareeNumber: index + 1,

@@ -2,18 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { PaymentForm } from "@/components/payment-form";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
-  calculateBalanceDue,
-  calculateDiscountAmount,
-  formatAdvancePaymentMethod,
+  calculateOrderTotals,
   formatCurrency,
   formatDate,
   formatDateTime,
   formatDeliveryType,
   formatDiscountType,
   formatOrderType,
+  formatPaymentMethod,
   formatPickupDrop,
 } from "@/lib/orders";
 import {
@@ -83,6 +83,22 @@ No of Sarees: ${itemCount}
 Balance Due: ${formatCurrency(balanceDue)}`;
 }
 
+function buildPaymentReminderMessage({
+  customerName,
+  orderId,
+  balanceDue,
+}: {
+  customerName: string;
+  orderId: number;
+  balanceDue: number;
+}) {
+  return `Hi ${customerName}
+
+Quick reminder - balance due of ${formatCurrency(balanceDue)} for Order #${orderId}.
+
+Thank you!`;
+}
+
 function buildItemWhatsAppMessage({
   status,
   customerName,
@@ -139,6 +155,16 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           },
         },
       },
+      payments: {
+        orderBy: { paymentDate: "desc" },
+        include: {
+          recordedBy: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -146,23 +172,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     notFound();
   }
 
-  const totalPrice = order.items.reduce(
-    (sum, item) => sum + numberValue(item.price),
-    0,
-  );
-  const discountValue = numberValue(order.discountValue);
-  const advancePaid = numberValue(order.advancePaid);
-  const discountAmount = calculateDiscountAmount(
-    totalPrice,
-    discountValue,
-    order.discountType,
-  );
-  const balanceDue = calculateBalanceDue({
-    totalPrice,
-    discountValue,
-    discountType: order.discountType,
-    advancePaid,
-  });
+  const { totalPrice, totalPaid, discountValue, discountAmount, balanceDue } =
+    calculateOrderTotals(order);
   const statusSummary = getOrderStatusSummary(order.items);
   const allItemsShareStatus = order.items.every(
     (item) => item.status === order.items[0]?.status,
@@ -248,14 +259,13 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   value={formatCurrency(discountAmount)}
                 />
                 <SummaryTile
-                  label="Advance"
-                  value={formatCurrency(advancePaid)}
+                  label="Paid"
+                  value={formatCurrency(totalPaid)}
                 />
                 <SummaryTile label="Due" value={formatCurrency(balanceDue)} />
               </div>
               <p className="mt-3 text-xs text-stone-600">
                 Discount: {discountValue} {formatDiscountType(order.discountType)}.
-                Advance: {formatAdvancePaymentMethod(order.advancePaymentMethod)}.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {bulkNextStatus ? (
@@ -285,7 +295,69 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                     Send WhatsApp Update
                   </a>
                 ) : null}
+                {balanceDue > 0 ? (
+                  <a
+                    href={getWhatsAppHref({
+                      phoneNumber: order.customer.phoneNumber,
+                      message: buildPaymentReminderMessage({
+                        customerName: order.customer.name,
+                        orderId: order.id,
+                        balanceDue,
+                      }),
+                    })}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-10 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-sm font-bold text-stone-700 hover:bg-stone-50"
+                  >
+                    <MessageCircle aria-hidden="true" className="h-4 w-4" />
+                    Payment Reminder
+                  </a>
+                ) : null}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-4 rounded-md border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+          <h2 className="mb-4 text-lg font-semibold text-stone-950">
+            Record Payment
+          </h2>
+          <PaymentForm orderId={order.id} />
+          <div className="mt-6">
+            <h3 className="mb-3 text-sm font-bold text-stone-900">
+              Payment History
+            </h3>
+            <div className="overflow-hidden rounded-md border border-stone-200">
+              {order.payments.length > 0 ? (
+                order.payments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="border-b border-stone-100 px-3 py-3 last:border-b-0"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-bold text-stone-950">
+                          {formatCurrency(numberValue(payment.amount))}
+                        </p>
+                        <p className="text-xs text-stone-600">
+                          {formatDateTime(payment.paymentDate)} -{" "}
+                          {formatPaymentMethod(payment.method)} -{" "}
+                          {payment.recordedBy.name}
+                        </p>
+                        {payment.notes ? (
+                          <p className="mt-1 text-xs text-stone-500">
+                            {payment.notes}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-3 py-6 text-center text-sm text-stone-500">
+                  No payments recorded yet.
+                </div>
+              )}
             </div>
           </div>
         </section>

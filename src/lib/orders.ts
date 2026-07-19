@@ -13,7 +13,7 @@ export const discountTypes = [
   { value: "PERCENT", label: "Percent" },
 ] as const;
 
-export const advancePaymentMethods = [
+export const paymentMethods = [
   { value: "CASH", label: "Cash" },
   { value: "UPI", label: "UPI" },
 ] as const;
@@ -37,11 +37,8 @@ export function formatDiscountType(value?: string | null) {
   return discountTypes.find((type) => type.value === value)?.label ?? "Not set";
 }
 
-export function formatAdvancePaymentMethod(value?: string | null) {
-  return (
-    advancePaymentMethods.find((method) => method.value === value)?.label ??
-    "Not set"
-  );
+export function formatPaymentMethod(value?: string | null) {
+  return paymentMethods.find((method) => method.value === value)?.label ?? "Not set";
 }
 
 export function formatPickupDrop(value?: string | null) {
@@ -98,12 +95,12 @@ export function calculateBalanceDue({
   totalPrice,
   discountValue,
   discountType,
-  advancePaid,
+  totalPaid,
 }: {
   totalPrice: number;
   discountValue: number;
   discountType: string;
-  advancePaid: number;
+  totalPaid: number;
 }) {
   const discountAmount = calculateDiscountAmount(
     totalPrice,
@@ -111,6 +108,42 @@ export function calculateBalanceDue({
     discountType,
   );
 
-  return Math.max(0, totalPrice - discountAmount - advancePaid);
+  return Math.max(0, totalPrice - discountAmount - totalPaid);
 }
 
+export function calculateOrderTotals(order: {
+  discountValue: { toString: () => string };
+  discountType: string;
+  items: Array<{ price: { toString: () => string } }>;
+  payments?: Array<{ amount: { toString: () => string } }>;
+}) {
+  const totalPrice = order.items.reduce(
+    (sum, item) => sum + Number(item.price.toString()),
+    0,
+  );
+  const totalPaid =
+    order.payments?.reduce(
+      (sum, payment) => sum + Number(payment.amount.toString()),
+      0,
+    ) ?? 0;
+  const discountValue = Number(order.discountValue.toString());
+  const discountAmount = calculateDiscountAmount(
+    totalPrice,
+    discountValue,
+    order.discountType,
+  );
+  const balanceDue = calculateBalanceDue({
+    totalPrice,
+    discountValue,
+    discountType: order.discountType,
+    totalPaid,
+  });
+
+  return {
+    totalPrice,
+    totalPaid,
+    discountValue,
+    discountAmount,
+    balanceDue,
+  };
+}

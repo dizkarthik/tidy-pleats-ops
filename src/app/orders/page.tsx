@@ -5,7 +5,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
-  calculateBalanceDue,
+  calculateOrderTotals,
   formatCurrency,
   formatDate,
   formatOrderType,
@@ -37,10 +37,6 @@ function parseDateFilter(value?: string) {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
-function numberValue(value: { toString: () => string }) {
-  return Number(value.toString());
-}
-
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const user = await requireUser();
   const params = await searchParams;
@@ -65,7 +61,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     segment === "overdue"
       ? {
           neededBy: { lt: todayStart },
-          status: { notIn: ["DELIVERED", "CANCELLED"] },
+          status: { notIn: ["READY", "DELIVERED", "CANCELLED"] },
         }
       : segment === "due-today"
         ? {
@@ -119,6 +115,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       items: {
         orderBy: { neededBy: "asc" },
       },
+      payments: true,
     },
     orderBy: { orderDate: "desc" },
   });
@@ -209,16 +206,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           {sortedOrders.length > 0 ? (
             sortedOrders.map((order) => {
               const statusSummary = getOrderStatusSummary(order.items);
-              const totalPrice = order.items.reduce(
-                (sum, item) => sum + numberValue(item.price),
-                0,
-              );
-              const balanceDue = calculateBalanceDue({
-                totalPrice,
-                discountValue: numberValue(order.discountValue),
-                discountType: order.discountType,
-                advancePaid: numberValue(order.advancePaid),
-              });
+              const { totalPrice, balanceDue } = calculateOrderTotals(order);
               const nearestNeededBy = order.items[0]?.neededBy;
 
               return (

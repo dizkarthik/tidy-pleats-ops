@@ -1,18 +1,15 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
-import { calculateBalanceDue, formatCurrency, formatDate } from "@/lib/orders";
+import { calculateOrderTotals, formatCurrency, formatDate } from "@/lib/orders";
 import {
   activeOrderItemStatuses,
   getStatusBadgeClass,
 } from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
-
-function numberValue(value: { toString: () => string }) {
-  return Number(value.toString());
-}
 
 function getWeekStart(date: Date) {
   const start = new Date(date);
@@ -23,6 +20,42 @@ function getWeekStart(date: Date) {
   return start;
 }
 
+function getMonthStart(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function isDateInNextDays(value: Date | null, baseDate: Date, days: number) {
+  if (!value) {
+    return false;
+  }
+
+  const start = new Date(baseDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+
+  for (let offset = 0; offset <= days; offset += 1) {
+    const candidate = new Date(start);
+    candidate.setDate(candidate.getDate() + offset);
+
+    if (
+      candidate.getMonth() === value.getMonth() &&
+      candidate.getDate() === value.getDate()
+    ) {
+      return candidate >= start && candidate <= end;
+    }
+  }
+
+  return false;
+}
+
+function isCancelledOrder(order: { items: Array<{ status: string }> }) {
+  return (
+    order.items.length > 0 &&
+    order.items.every((item) => item.status === "CANCELLED")
+  );
+}
+
 export default async function DashboardPage() {
   const user = await requireUser();
   const now = new Date();
@@ -31,20 +64,44 @@ export default async function DashboardPage() {
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
   const weekStart = getWeekStart(now);
+  const monthStart = getMonthStart(now);
 
-  const orders = await getPrisma().order.findMany({
-    include: {
-      customer: {
-        select: {
-          name: true,
+  const [orders, customers, todayPayments] = await Promise.all([
+    getPrisma().order.findMany({
+      include: {
+        customer: {
+          select: {
+            name: true,
+          },
+        },
+        items: {
+          orderBy: { neededBy: "asc" },
+        },
+        payments: true,
+      },
+      orderBy: { orderDate: "desc" },
+    }),
+    getPrisma().customer.findMany({
+      where: {
+        OR: [
+          { dateAdded: { gte: weekStart } },
+          { birthdayDate: { not: null } },
+          { referrals: { some: { dateAdded: { gte: monthStart } } } },
+        ],
+      },
+      include: {
+        referrals: {
+          where: { dateAdded: { gte: monthStart } },
+          select: { id: true },
         },
       },
-      items: {
-        orderBy: { neededBy: "asc" },
+    }),
+    getPrisma().payment.findMany({
+      where: {
+        paymentDate: { gte: todayStart, lte: todayEnd },
       },
-    },
-    orderBy: { orderDate: "desc" },
-  });
+    }),
+  ]);
 
   const allItems = orders.flatMap((order) =>
     order.items.map((item) => ({
@@ -56,13 +113,19 @@ export default async function DashboardPage() {
   const openItems = allItems.filter(
     (item) => item.status !== "DELIVERED" && item.status !== "CANCELLED",
   );
-  const overdueItems = openItems.filter((item) => item.neededBy < todayStart);
+  const overdueItems = openItems.filter(
+    (item) => item.status !== "READY" && item.neededBy < todayStart,
+  );
   const dueTodayItems = openItems.filter(
     (item) => item.neededBy >= todayStart && item.neededBy <= todayEnd,
   );
   const readyItems = allItems.filter((item) => item.status === "READY");
   const statusCounts = activeOrderItemStatuses
-    .filter((status) => status.value !== "DELIVERED")
+    .filter((status) =>
+      ["BOOKED", "COLLECTED", "IN_PROGRESS", "QUALITY_CHECK"].includes(
+        status.value,
+      ),
+    )
     .map((status) => ({
       ...status,
       count: allItems.filter((item) => item.status === status.value).length,
@@ -72,31 +135,37 @@ export default async function DashboardPage() {
     .reduce(
       (sum, order) =>
         sum +
-        order.items.reduce((itemSum, item) => itemSum + numberValue(item.price), 0),
+        order.items.reduce(
+          (itemSum, item) => itemSum + Number(item.price.toString()),
+          0,
+        ),
       0,
     );
   const pendingBalance = orders
-    .filter((order) =>
-      order.items.some(
-        (item) => item.status !== "DELIVERED" && item.status !== "CANCELLED",
-      ),
-    )
-    .reduce((sum, order) => {
-      const totalPrice = order.items.reduce(
-        (itemSum, item) => itemSum + numberValue(item.price),
-        0,
-      );
-
-      return (
-        sum +
-        calculateBalanceDue({
-          totalPrice,
-          discountValue: numberValue(order.discountValue),
-          discountType: order.discountType,
-          advancePaid: numberValue(order.advancePaid),
-        })
-      );
-    }, 0);
+    .filter((order) => !isCancelledOrder(order))
+    .reduce((sum, order) => sum + calculateOrderTotals(order).balanceDue, 0);
+  const todayCollections = todayPayments.reduce(
+    (total, payment) => total + Number(payment.amount),
+    0,
+  );
+  const todayCash = todayPayments
+    .filter((payment) => payment.method === "CASH")
+    .reduce((total, payment) => total + Number(payment.amount), 0);
+  const todayUpi = todayPayments
+    .filter((payment) => payment.method === "UPI")
+    .reduce((total, payment) => total + Number(payment.amount), 0);
+  const newCustomersThisWeek = customers.filter(
+    (customer) => customer.dateAdded >= weekStart,
+  ).length;
+  const upcomingBirthdays = customers.filter((customer) =>
+    isDateInNextDays(customer.birthdayDate, now, 7),
+  ).length;
+  const topReferrer = customers
+    .map((customer) => ({
+      name: customer.name,
+      count: customer.referrals.length,
+    }))
+    .sort((left, right) => right.count - left.count)[0];
 
   return (
     <>
@@ -107,7 +176,7 @@ export default async function DashboardPage() {
           <p className="text-sm text-stone-600">Daily order operations</p>
         </div>
 
-        <section className="mb-5 grid gap-3 sm:grid-cols-2">
+        <DashboardSection title="Needs Attention">
           <DashboardCard
             href="/orders?segment=overdue"
             label="Overdue"
@@ -129,38 +198,36 @@ export default async function DashboardPage() {
             tone="teal"
             detail="Items currently ready"
           />
+        </DashboardSection>
+
+        <DashboardSection title="Status Overview">
+          {statusCounts.map((status) => (
+            <DashboardCard
+              key={status.value}
+              href={`/orders?status=${status.value}`}
+              label={status.label}
+              value={String(status.count)}
+              tone="stone"
+              detail="Active work only"
+            />
+          ))}
+        </DashboardSection>
+
+        <DashboardSection title="Financial">
           <DashboardCard
-            href="/orders"
-            label="Pending Balance"
+            href="/payments"
+            label="Pending Dues"
             value={formatCurrency(pendingBalance)}
             tone="stone"
-            detail="Open orders only"
+            detail="Open non-cancelled orders"
           />
-        </section>
-
-        <section className="mb-5 rounded-md border border-stone-200 bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold text-stone-950">
-            Status Counts
-          </h2>
-          <div className="grid gap-2 sm:grid-cols-5">
-            {statusCounts.map((status) => (
-              <Link
-                key={status.value}
-                href={`/orders?status=${status.value}`}
-                className="rounded-md border border-stone-200 bg-stone-50 px-3 py-3 hover:bg-stone-100"
-              >
-                <p className="text-xs font-medium uppercase text-stone-500">
-                  {status.label}
-                </p>
-                <p className="mt-1 text-xl font-bold text-stone-950">
-                  {status.count}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-3 sm:grid-cols-2">
+          <DashboardCard
+            href="/payments"
+            label="Today's Collections"
+            value={formatCurrency(todayCollections)}
+            tone="teal"
+            detail={`Cash ${formatCurrency(todayCash)} - UPI ${formatCurrency(todayUpi)}`}
+          />
           <DashboardCard
             href="/orders"
             label="This Week's Revenue"
@@ -168,16 +235,50 @@ export default async function DashboardPage() {
             tone="teal"
             detail={`Since ${formatDate(weekStart)}`}
           />
+        </DashboardSection>
+
+        <DashboardSection title="Customers & Growth">
           <DashboardCard
-            href="/orders?status=READY"
-            label="Ready Items"
-            value={String(readyItems.length)}
-            tone="teal"
-            detail="Tap to open ready orders"
+            href="/customers"
+            label="New Customers This Week"
+            value={String(newCustomersThisWeek)}
+            tone="stone"
+            detail={`Since ${formatDate(weekStart)}`}
           />
-        </section>
+          <DashboardCard
+            href="/customers"
+            label="Upcoming Birthdays"
+            value={String(upcomingBirthdays)}
+            tone="stone"
+            detail="Next 7 days"
+          />
+          <DashboardCard
+            href="/customers"
+            label="Top Referrer This Month"
+            value={topReferrer?.count ? topReferrer.name : "None"}
+            tone="stone"
+            detail={`${topReferrer?.count ?? 0} referral${
+              topReferrer?.count === 1 ? "" : "s"
+            }`}
+          />
+        </DashboardSection>
       </main>
     </>
+  );
+}
+
+function DashboardSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mb-5">
+      <h2 className="mb-3 text-lg font-semibold text-stone-950">{title}</h2>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+    </section>
   );
 }
 

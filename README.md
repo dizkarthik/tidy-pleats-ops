@@ -9,10 +9,12 @@ The app currently contains Customer Contact Management and Order Management:
 - Searchable customer list by name, phone number, or location.
 - Customer profile view with notes and date added.
 - Create single or multi-saree orders linked to existing customers.
-- Track needed-by date, pickup/drop, saree pleat counts, damage notes, photos, price, discounts, advance paid, and balance due.
+- Track needed-by date, pickup/drop, saree pleat counts, damage notes, photos, price, discounts, payments, and balance due.
 - Search and filter the order list, then open full order details.
 - Track per-saree item status from Booked through Delivered, with status history and WhatsApp update links for Collected/Ready milestones.
-- Dashboard for daily operations: overdue/due-today work, ready items, status counts, weekly revenue, and pending balances.
+- Record order payments with method, date, notes, and payment history.
+- Dues ledger for unpaid balances with WhatsApp payment reminder links.
+- Dashboard for daily operations: needs attention, active status overview, financial totals, and customer growth.
 - Mobile-first PWA setup with manifest, icons, and service worker.
 
 ## Tech Stack
@@ -79,6 +81,8 @@ npx prisma studio
 The `Customer.referredByCustomerId` field is a self-referencing foreign key instead of free text. This prevents duplicate or typo-filled referral names and preserves accurate referral counts for later phases.
 
 Orders use a single `orders` + `order_items` schema for both Single and Multi order flows. A Single order is one order item with `deliveryType` set to `ONE_TIME`, which keeps reports and later status workflows consistent. Needed-by, pickup/drop, and address are always stored on each `order_items` row; when the UI asks for common delivery details once, those values are copied into every item.
+
+Payments are stored as transaction rows in `payments` instead of editable amount fields on `orders`. Balance due is always calculated from item prices minus discount minus the sum of recorded payments, which preserves payment history and supports partial payments. The migration `20260719162000_replace_advance_with_payments` backfills any legacy advance amount into `payments` before dropping the old order columns.
 
 Saree photos are uploaded to Vercel Blob through `BLOB_READ_WRITE_TOKEN`; only the Blob URL is saved in Postgres.
 
