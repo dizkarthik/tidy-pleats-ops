@@ -97,6 +97,7 @@ export async function createCustomerAction(
   }
 
   const data = parsed.data;
+  let customerId: string;
 
   try {
     const customer = await getPrisma().customer.create({
@@ -117,8 +118,7 @@ export async function createCustomerAction(
       },
     });
 
-    revalidatePath("/customers");
-    redirect(`/customers/${customer.id}`);
+    customerId = customer.id;
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -131,4 +131,7 @@ export async function createCustomerAction(
 
     return { error: "Could not save customer. Please try again." };
   }
+
+  revalidatePath("/customers");
+  redirect(`/customers/${customerId}`);
 }
