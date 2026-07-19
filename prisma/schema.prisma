@@ -79,6 +79,7 @@ model User {
   role         UserRole
   sessions     Session[]
   statusChanges OrderItemStatusHistory[]
+  paymentsRecorded Payment[]
   createdAt    DateTime  @default(now())
 
   @@map("users")
@@ -131,8 +132,6 @@ model Order {
   deliveryType         DeliveryType
   discountValue        Decimal              @default(0) @db.Decimal(10, 2)
   discountType         DiscountType         @default(RUPEE)
-  advancePaid          Decimal              @default(0) @db.Decimal(10, 2)
-  advancePaymentMethod AdvancePaymentMethod @default(CASH)
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -140,11 +139,31 @@ model Order {
   // deliveryType stored as ONE_TIME, which keeps later reporting consistent.
   customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
   items    OrderItem[]
+  payments Payment[]
 
   @@index([customerId])
   @@index([orderDate])
   @@index([orderType])
   @@map("orders")
+}
+
+model Payment {
+  id           String               @id @default(cuid())
+  orderId      Int
+  amount       Decimal              @db.Decimal(10, 2)
+  method       AdvancePaymentMethod
+  paymentDate  DateTime             @default(now())
+  recordedById String
+  notes        String?
+  createdAt    DateTime             @default(now())
+
+  order      Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  recordedBy User  @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([recordedById])
+  @@index([paymentDate])
+  @@map("payments")
 }
 
 model OrderItem {
