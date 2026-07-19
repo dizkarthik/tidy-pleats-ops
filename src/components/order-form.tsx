@@ -584,10 +584,10 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
           <div className="space-y-2">
             <input type="hidden" name="discountType" value={discountType} />
             <span className="text-sm font-medium text-stone-800">Discount</span>
-            <div className="flex min-h-16 items-center gap-3 rounded-full border border-stone-300 bg-white px-4 py-2 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-100">
+            <div className="flex min-h-12 items-center gap-3 rounded-md border border-stone-300 bg-white px-3 py-1.5 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-100">
               <div className="relative min-w-0 flex-1">
                 {discountType === "RUPEE" ? (
-                  <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-2xl font-medium text-stone-900">
+                  <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
                     ₹
                   </span>
                 ) : null}
@@ -596,18 +596,18 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                   value={discountValue}
                   onChange={(event) => setDiscountValue(event.target.value)}
                   inputMode="decimal"
-                  className={`h-12 w-full border-0 bg-transparent text-2xl text-stone-900 outline-none placeholder:text-stone-400 ${
-                    discountType === "RUPEE" ? "pl-7 pr-2" : "pl-0 pr-8"
+                  className={`h-10 w-full border-0 bg-transparent text-base text-stone-950 outline-none placeholder:text-stone-400 ${
+                    discountType === "RUPEE" ? "pl-6 pr-2" : "pl-0 pr-7"
                   }`}
                 />
                 {discountType === "PERCENT" ? (
-                  <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-2xl font-medium text-stone-500">
+                  <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
                     %
                   </span>
                 ) : null}
               </div>
               <div
-                className="grid h-12 shrink-0 grid-cols-2 overflow-hidden rounded-full border border-stone-300 bg-stone-50 p-1"
+                className="grid h-10 shrink-0 grid-cols-2 overflow-hidden rounded-md border border-stone-300 bg-stone-50 p-0.5"
                 aria-label="Discount type"
               >
                 {[
@@ -618,9 +618,9 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                     key={type.value}
                     type="button"
                     onClick={() => setDiscountType(type.value)}
-                    className={`h-10 w-12 rounded-full text-lg font-bold transition-colors ${
+                    className={`h-9 w-11 rounded text-sm font-bold transition-colors ${
                       discountType === type.value
-                        ? "bg-lime-300 text-stone-950"
+                        ? "bg-teal-700 text-white"
                         : "text-stone-500 hover:text-stone-900"
                     }`}
                   >
