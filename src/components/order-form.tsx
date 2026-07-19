@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState, type FormEvent } from "react";
+import { useActionState, useMemo, useState } from "react";
 import {
   Camera,
   Minus,
@@ -8,8 +8,6 @@ import {
   Save,
   Search,
   Trash2,
-  UserPlus,
-  X,
 } from "lucide-react";
 import {
   createOrderAction,
@@ -20,7 +18,6 @@ import {
   calculateBalanceDue,
   calculateDiscountAmount,
   deliveryTypes,
-  discountTypes,
   formatCurrency,
   pickupDropOptions,
 } from "@/lib/orders";
@@ -68,8 +65,8 @@ function createItemDraft(common: {
   address: string;
 }): OrderItemDraft {
   return {
-    palluPleats: 0,
-    centerPleats: 0,
+    palluPleats: 5,
+    centerPleats: 5,
     photoUrl: "",
     sareeNotes: "",
     damageNoticed: false,
@@ -120,7 +117,7 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
     OrderActionState,
     FormData
   >(createOrderAction, {});
-  const [customers, setCustomers] = useState(initialCustomers);
+  const customers = initialCustomers;
   const [customerQuery, setCustomerQuery] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [orderType, setOrderType] = useState("SINGLE");
@@ -138,8 +135,6 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
   const [discountValue, setDiscountValue] = useState("0");
   const [discountType, setDiscountType] = useState("RUPEE");
   const [advancePaid, setAdvancePaid] = useState("0");
-  const [isCustomerSheetOpen, setIsCustomerSheetOpen] = useState(false);
-  const [quickCustomerError, setQuickCustomerError] = useState("");
   const [uploadingItemIndex, setUploadingItemIndex] = useState<number | null>(
     null,
   );
@@ -238,38 +233,6 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
     }
   }
 
-  async function handleQuickCustomerSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setQuickCustomerError("");
-
-    const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/customers/quick", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: formData.get("name"),
-        phoneNumber: formData.get("phoneNumber"),
-        location: formData.get("location"),
-        address: formData.get("address"),
-      }),
-    });
-    const result = await response.json();
-
-    if (!response.ok) {
-      setQuickCustomerError(result.error ?? "Could not save customer.");
-      return;
-    }
-
-    setCustomers((currentCustomers) =>
-      [...currentCustomers, result.customer].sort((a, b) =>
-        a.name.localeCompare(b.name),
-      ),
-    );
-    setSelectedCustomerId(result.customer.id);
-    setCustomerQuery(result.customer.name);
-    setIsCustomerSheetOpen(false);
-  }
-
   return (
     <>
       <form action={formAction} className="space-y-8">
@@ -341,8 +304,8 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
         </label>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <label className="flex-1 space-y-2">
+          <div>
+            <label className="block space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Customer
               </span>
@@ -362,15 +325,6 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 />
               </span>
             </label>
-            <button
-              type="button"
-              onClick={() => setIsCustomerSheetOpen(true)}
-              className="mt-6 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-teal-700 text-white hover:bg-teal-800"
-              aria-label="Add customer"
-              title="Add customer"
-            >
-              <UserPlus aria-hidden="true" className="h-5 w-5" />
-            </button>
           </div>
 
           {selectedCustomer ? (
@@ -420,30 +374,25 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
         </div>
 
         {isOneTime ? (
-          <section className="space-y-5 rounded-md border border-stone-200 bg-white p-4 sm:p-5">
-            <h2 className="text-sm font-bold text-stone-900">
-              Common delivery
-            </h2>
-            <DeliveryFields
-              neededBy={commonNeededBy}
-              pickupDrop={commonPickupDrop}
-              address={commonAddress}
-              onChange={(next) => {
-                if (next.neededBy !== undefined) setCommonNeededBy(next.neededBy);
-                if (next.pickupDrop !== undefined) {
-                  setCommonPickupDrop(next.pickupDrop);
-                  if (next.pickupDrop === "NO") setCommonAddress("");
-                }
-                if (next.address !== undefined) setCommonAddress(next.address);
-              }}
-            />
-          </section>
+          <DeliveryFields
+            neededBy={commonNeededBy}
+            pickupDrop={commonPickupDrop}
+            address={commonAddress}
+            onChange={(next) => {
+              if (next.neededBy !== undefined) setCommonNeededBy(next.neededBy);
+              if (next.pickupDrop !== undefined) {
+                setCommonPickupDrop(next.pickupDrop);
+                if (next.pickupDrop === "NO") setCommonAddress("");
+              }
+              if (next.address !== undefined) setCommonAddress(next.address);
+            }}
+          />
         ) : null}
 
         <section className="space-y-5">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-stone-950">Sarees</h2>
-            {orderType === "MULTI" ? (
+          {orderType === "MULTI" ? (
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-stone-950">Sarees</h2>
               <button
                 type="button"
                 onClick={() =>
@@ -461,17 +410,17 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                 <Plus aria-hidden="true" className="h-4 w-4" />
                 Add Saree #{items.length + 1}
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           {items.map((item, index) => (
             <div
               key={index}
-              className="space-y-6 rounded-md border border-stone-200 bg-white p-4 sm:p-5"
+              className="space-y-8 rounded-md border border-stone-200 bg-white p-4 sm:p-5"
             >
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-bold text-stone-900">
-                  Saree #{index + 1}
+                  {orderType === "MULTI" ? `Saree #${index + 1}` : "Saree"}
                 </h3>
                 {orderType === "MULTI" && items.length > 1 ? (
                   <button
@@ -531,15 +480,20 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
 
               <label className="space-y-2">
                 <span className="text-sm font-medium text-stone-800">Price</span>
-                <input
-                  value={item.price}
-                  onChange={(event) =>
-                    updateItem(index, { price: event.target.value })
-                  }
-                  inputMode="decimal"
-                  placeholder="0"
-                  className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-                />
+                <span className="relative block">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
+                    ₹
+                  </span>
+                  <input
+                    value={item.price}
+                    onChange={(event) =>
+                      updateItem(index, { price: event.target.value })
+                    }
+                    inputMode="decimal"
+                    placeholder="0"
+                    className="h-11 w-full rounded-md border border-stone-300 bg-white pl-8 pr-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                  />
+                </span>
               </label>
 
               {!isOneTime ? (
@@ -627,36 +581,58 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
 
         <section className="space-y-5 rounded-md border border-stone-200 bg-white p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-stone-950">Payment</h2>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <input type="hidden" name="discountType" value={discountType} />
             <label className="space-y-2">
               <span className="text-sm font-medium text-stone-800">
                 Discount
               </span>
-              <input
-                name="discountValue"
-                value={discountValue}
-                onChange={(event) => setDiscountValue(event.target.value)}
-                inputMode="decimal"
-                className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-stone-800">
-                Discount Type
+              <span className="relative block">
+                {discountType === "RUPEE" ? (
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
+                    ₹
+                  </span>
+                ) : null}
+                <input
+                  name="discountValue"
+                  value={discountValue}
+                  onChange={(event) => setDiscountValue(event.target.value)}
+                  inputMode="decimal"
+                  className={`h-11 w-full rounded-md border border-stone-300 bg-white pr-8 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100 ${
+                    discountType === "RUPEE" ? "pl-8" : "pl-3"
+                  }`}
+                />
+                {discountType === "PERCENT" ? (
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
+                    %
+                  </span>
+                ) : null}
               </span>
-              <select
-                name="discountType"
-                value={discountType}
-                onChange={(event) => setDiscountType(event.target.value)}
-                className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              >
-                {discountTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
             </label>
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium text-stone-800">
+                Discount Type
+              </legend>
+              <div className="grid h-11 grid-cols-2 overflow-hidden rounded-md border border-stone-300 bg-white">
+                {[
+                  { value: "PERCENT", label: "%" },
+                  { value: "RUPEE", label: "₹" },
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setDiscountType(type.value)}
+                    className={`w-14 text-sm font-bold ${
+                      discountType === type.value
+                        ? "bg-teal-700 text-white"
+                        : "bg-white text-stone-700 hover:bg-stone-50"
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
@@ -713,78 +689,6 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
         </button>
       </form>
 
-      {isCustomerSheetOpen ? (
-        <div className="fixed inset-0 z-50 bg-stone-950/40">
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-md bg-white p-4 shadow-2xl sm:left-1/2 sm:max-w-lg sm:-translate-x-1/2">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-stone-950">
-                Add Customer
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsCustomerSheetOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-stone-300 text-stone-700"
-                aria-label="Close add customer"
-              >
-                <X aria-hidden="true" className="h-4 w-4" />
-              </button>
-            </div>
-            <form onSubmit={handleQuickCustomerSubmit} className="space-y-6">
-              {quickCustomerError ? (
-                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-                  {quickCustomerError}
-                </div>
-              ) : null}
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-stone-800">
-                  Customer name
-                </span>
-                <input
-                  name="name"
-                  required
-                  className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-                />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-stone-800">
-                  Phone number
-                </span>
-                <input
-                  name="phoneNumber"
-                  required
-                  inputMode="tel"
-                  className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-                />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-stone-800">
-                  Location
-                </span>
-                <input
-                  name="location"
-                  className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-                />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-stone-800">
-                  Address
-                </span>
-                <textarea
-                  name="address"
-                  rows={3}
-                  className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-                />
-              </label>
-              <button
-                type="submit"
-                className="inline-flex h-11 w-full items-center justify-center rounded-md bg-teal-700 px-4 text-sm font-bold text-white hover:bg-teal-800"
-              >
-                Save and select
-              </button>
-            </form>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }
@@ -840,7 +744,7 @@ function DeliveryFields({
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-800">Needed By</span>
+        <span className="text-sm font-medium text-stone-800">Delivery date</span>
         <input
           type="date"
           value={neededBy}
