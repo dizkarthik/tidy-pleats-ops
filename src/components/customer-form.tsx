@@ -24,12 +24,15 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
   const [referralKind, setReferralKind] = useState("SOCIAL_MEDIA");
   const [customerQuery, setCustomerQuery] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const selectedCustomer = referralCustomers.find(
+    (customer) => customer.id === selectedCustomerId,
+  );
 
   const filteredCustomers = useMemo(() => {
     const query = customerQuery.trim().toLowerCase();
 
     if (!query) {
-      return referralCustomers.slice(0, 8);
+      return [];
     }
 
     return referralCustomers
@@ -155,44 +158,65 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
               />
               <input
                 value={customerQuery}
-                onChange={(event) => setCustomerQuery(event.target.value)}
+                onChange={(event) => {
+                  setCustomerQuery(event.target.value);
+                  setSelectedCustomerId("");
+                }}
                 placeholder="Name, phone, or location"
                 className="h-11 w-full rounded-md border border-stone-300 bg-white pl-9 pr-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
               />
             </div>
           </label>
 
-          <div className="max-h-64 overflow-y-auto rounded-md border border-stone-200 bg-white">
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((customer) => (
-                <button
-                  type="button"
-                  key={customer.id}
-                  onClick={() => setSelectedCustomerId(customer.id)}
-                  className={`flex w-full items-center justify-between gap-3 border-b border-stone-100 px-3 py-3 text-left last:border-b-0 ${
-                    selectedCustomerId === customer.id ? "bg-teal-50" : "bg-white"
-                  }`}
-                >
-                  <span>
-                    <span className="block text-sm font-medium text-stone-900">
-                      {customer.name}
+          {selectedCustomer ? (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-teal-200 bg-teal-50 px-3 py-3">
+              <span>
+                <span className="block text-sm font-medium text-stone-900">
+                  {selectedCustomer.name}
+                </span>
+                <span className="block text-xs text-stone-600">
+                  {selectedCustomer.phoneNumber}
+                  {selectedCustomer.location
+                    ? ` - ${selectedCustomer.location}`
+                    : ""}
+                </span>
+              </span>
+              <span className="text-xs font-bold text-teal-700">Selected</span>
+            </div>
+          ) : customerQuery.trim() ? (
+            <div className="max-h-64 overflow-y-auto rounded-md border border-stone-200 bg-white">
+              {filteredCustomers.length > 0 ? (
+                filteredCustomers.map((customer) => (
+                  <button
+                    type="button"
+                    key={customer.id}
+                    onClick={() => {
+                      setSelectedCustomerId(customer.id);
+                      setCustomerQuery(customer.name);
+                    }}
+                    className="flex w-full items-center justify-between gap-3 border-b border-stone-100 bg-white px-3 py-3 text-left last:border-b-0 hover:bg-stone-50"
+                  >
+                    <span>
+                      <span className="block text-sm font-medium text-stone-900">
+                        {customer.name}
+                      </span>
+                      <span className="block text-xs text-stone-500">
+                        {customer.phoneNumber}
+                        {customer.location ? ` - ${customer.location}` : ""}
+                      </span>
                     </span>
-                    <span className="block text-xs text-stone-500">
-                      {customer.phoneNumber}
-                      {customer.location ? ` - ${customer.location}` : ""}
+                    <span className="text-xs font-bold text-teal-700">
+                      Choose
                     </span>
-                  </span>
-                  <span className="text-xs font-medium text-teal-700">
-                    {selectedCustomerId === customer.id ? "Selected" : "Choose"}
-                  </span>
-                </button>
-              ))
-            ) : (
-              <div className="px-3 py-4 text-sm text-stone-500">
-                No existing customer matches this search.
-              </div>
-            )}
-          </div>
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-4 text-sm text-stone-500">
+                  No existing customer matches this search.
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       )}
 
