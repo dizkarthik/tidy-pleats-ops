@@ -56,6 +56,38 @@ function parseBirthday(value?: string) {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
+function parseCustomerForm(formData: FormData) {
+  return customerSchema.safeParse({
+    name: formData.get("name"),
+    phoneNumber: formData.get("phoneNumber"),
+    location: formData.get("location"),
+    address: formData.get("address"),
+    birthdayDate: formData.get("birthdayDate"),
+    referralKind: formData.get("referralKind"),
+    referralSource: formData.get("referralSource") || undefined,
+    referredByCustomerId: formData.get("referredByCustomerId") || undefined,
+    notes: formData.get("notes"),
+  });
+}
+
+function getCustomerData(data: z.infer<typeof customerSchema>) {
+  return {
+    name: data.name,
+    phoneNumber: data.phoneNumber,
+    location: optionalText(data.location),
+    address: optionalText(data.address),
+    birthdayDate: parseBirthday(data.birthdayDate),
+    referralKind: data.referralKind,
+    referralSource:
+      data.referralKind === "SOCIAL_MEDIA" ? data.referralSource : null,
+    referredByCustomerId:
+      data.referralKind === "EXISTING_CUSTOMER"
+        ? data.referredByCustomerId
+        : null,
+    notes: optionalText(data.notes),
+  };
+}
+
 export async function loginAction(_state: ActionState, formData: FormData) {
   const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -80,17 +112,7 @@ export async function createCustomerAction(
 ) {
   await requireUser();
 
-  const parsed = customerSchema.safeParse({
-    name: formData.get("name"),
-    phoneNumber: formData.get("phoneNumber"),
-    location: formData.get("location"),
-    address: formData.get("address"),
-    birthdayDate: formData.get("birthdayDate"),
-    referralKind: formData.get("referralKind"),
-    referralSource: formData.get("referralSource") || undefined,
-    referredByCustomerId: formData.get("referredByCustomerId") || undefined,
-    notes: formData.get("notes"),
-  });
+  const parsed = parseCustomerForm(formData);
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Check the form fields." };
@@ -101,21 +123,7 @@ export async function createCustomerAction(
 
   try {
     const customer = await getPrisma().customer.create({
-      data: {
-        name: data.name,
-        phoneNumber: data.phoneNumber,
-        location: optionalText(data.location),
-        address: optionalText(data.address),
-        birthdayDate: parseBirthday(data.birthdayDate),
-        referralKind: data.referralKind,
-        referralSource:
-          data.referralKind === "SOCIAL_MEDIA" ? data.referralSource : null,
-        referredByCustomerId:
-          data.referralKind === "EXISTING_CUSTOMER"
-            ? data.referredByCustomerId
-            : null,
-        notes: optionalText(data.notes),
-      },
+      data: getCustomerData(data),
     });
 
     customerId = customer.id;
@@ -133,5 +141,52 @@ export async function createCustomerAction(
   }
 
   revalidatePath("/customers");
+  redirect(`/customers/${customerId}`);
+}
+
+export async function updateCustomerAction(
+  _state: ActionState,
+  formData: FormData,
+) {
+  await requireUser();
+
+  const customerId = String(formData.get("customerId") ?? "").trim();
+
+  if (!customerId) {
+    return { error: "Customer id is missing." };
+  }
+
+  const parsed = parseCustomerForm(formData);
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Check the form fields." };
+  }
+
+  const data = parsed.data;
+
+  if (data.referredByCustomerId === customerId) {
+    return { error: "A customer cannot refer themselves." };
+  }
+
+  try {
+    await getPrisma().customer.update({
+      where: { id: customerId },
+      data: getCustomerData(data),
+    });
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return { error: "A customer with this phone number already exists." };
+    }
+
+    return { error: "Could not update customer. Please try again." };
+  }
+
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${customerId}`);
   redirect(`/customers/${customerId}`);
 }

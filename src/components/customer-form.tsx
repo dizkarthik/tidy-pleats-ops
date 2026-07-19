@@ -13,17 +13,55 @@ type ReferralCustomer = {
 };
 
 type CustomerFormProps = {
+  action?: (
+    state: ActionState,
+    formData: FormData,
+  ) => Promise<ActionState>;
+  customer?: {
+    id: string;
+    name: string;
+    phoneNumber: string;
+    location: string | null;
+    address: string | null;
+    birthdayDate: Date | null;
+    referralKind: string;
+    referralSource: string | null;
+    referredByCustomerId: string | null;
+    notes: string | null;
+  };
   referralCustomers: ReferralCustomer[];
 };
 
-export function CustomerForm({ referralCustomers }: CustomerFormProps) {
+function getDateInputValue(value?: Date | null) {
+  if (!value) {
+    return "";
+  }
+
+  return value.toISOString().slice(0, 10);
+}
+
+export function CustomerForm({
+  action = createCustomerAction,
+  customer,
+  referralCustomers,
+}: CustomerFormProps) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    createCustomerAction,
+    action,
     {},
   );
-  const [referralKind, setReferralKind] = useState("SOCIAL_MEDIA");
-  const [customerQuery, setCustomerQuery] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const initialSelectedCustomer = referralCustomers.find(
+    (referralCustomer) =>
+      referralCustomer.id === customer?.referredByCustomerId,
+  );
+  const [referralKind, setReferralKind] = useState(
+    customer?.referralKind ?? "SOCIAL_MEDIA",
+  );
+  const [customerQuery, setCustomerQuery] = useState(
+    initialSelectedCustomer?.name ?? "",
+  );
+  const [selectedCustomerId, setSelectedCustomerId] = useState(
+    customer?.referredByCustomerId ?? "",
+  );
   const selectedCustomer = referralCustomers.find(
     (customer) => customer.id === selectedCustomerId,
   );
@@ -47,6 +85,8 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
 
   return (
     <form action={formAction} className="space-y-5">
+      {customer ? <input type="hidden" name="customerId" value={customer.id} /> : null}
+
       {state.error ? (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}
@@ -59,6 +99,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
           <input
             name="name"
             required
+            defaultValue={customer?.name ?? ""}
             className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
           />
         </label>
@@ -69,6 +110,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
             name="phoneNumber"
             required
             inputMode="tel"
+            defaultValue={customer?.phoneNumber ?? ""}
             className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
           />
         </label>
@@ -80,6 +122,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
           <input
             name="location"
             placeholder="Area or locality"
+            defaultValue={customer?.location ?? ""}
             className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
           />
         </label>
@@ -89,6 +132,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
           <input
             name="birthdayDate"
             type="date"
+            defaultValue={getDateInputValue(customer?.birthdayDate)}
             className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
           />
         </label>
@@ -99,6 +143,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
         <textarea
           name="address"
           rows={3}
+          defaultValue={customer?.address ?? ""}
           className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
         />
       </label>
@@ -130,7 +175,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
           <span className="text-sm font-medium text-stone-800">Referral source</span>
           <select
             name="referralSource"
-            defaultValue="INSTAGRAM"
+            defaultValue={customer?.referralSource ?? "INSTAGRAM"}
             className="h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
           >
             {referralSources.map((source) => (
@@ -225,6 +270,7 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
         <textarea
           name="notes"
           rows={5}
+          defaultValue={customer?.notes ?? ""}
           className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
         />
       </label>
@@ -235,7 +281,11 @@ export function CustomerForm({ referralCustomers }: CustomerFormProps) {
         className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
       >
         <Save aria-hidden="true" className="h-4 w-4" />
-        {isPending ? "Saving..." : "Save customer"}
+        {isPending
+          ? "Saving..."
+          : customer
+            ? "Update customer"
+            : "Save customer"}
       </button>
     </form>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, UserRound } from "lucide-react";
+import { Download, Pencil, Search, UserRound } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
@@ -67,12 +67,21 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             <h1 className="text-2xl font-semibold text-stone-950">Customers</h1>
             <p className="text-sm text-stone-600">{customers.length} shown</p>
           </div>
-          <Link
-            href="/customers/new"
-            className="rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800"
-          >
-            Add
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/customers/export"
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-700 hover:bg-stone-50"
+            >
+              <Download aria-hidden="true" className="h-4 w-4" />
+              Export
+            </Link>
+            <Link
+              href="/customers/new"
+              className="inline-flex h-10 items-center rounded-md bg-teal-700 px-3 text-sm font-semibold text-white hover:bg-teal-800"
+            >
+              Add
+            </Link>
+          </div>
         </div>
 
         <form className="mb-4">
@@ -119,24 +128,36 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
           {customers.length > 0 ? (
             customers.map((customer) => (
-              <Link
+              <div
                 key={customer.id}
-                href={`/customers/${customer.id}`}
                 className="flex items-center gap-3 border-b border-stone-100 px-3 py-4 last:border-b-0 hover:bg-stone-50"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-stone-100 text-stone-700">
-                  <UserRound aria-hidden="true" className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-stone-950">
-                    {customer.name}
+                <Link
+                  href={`/customers/${customer.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-stone-100 text-stone-700">
+                    <UserRound aria-hidden="true" className="h-5 w-5" />
                   </span>
-                  <span className="block truncate text-sm text-stone-600">
-                    {customer.phoneNumber}
-                    {customer.location ? ` - ${customer.location}` : ""}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-stone-950">
+                      {customer.name}
+                    </span>
+                    <span className="block truncate text-sm text-stone-600">
+                      {customer.phoneNumber}
+                      {customer.location ? ` - ${customer.location}` : ""}
+                    </span>
                   </span>
-                </span>
-              </Link>
+                </Link>
+                <Link
+                  href={`/customers/${customer.id}/edit`}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                  aria-label={`Edit ${customer.name}`}
+                  title={`Edit ${customer.name}`}
+                >
+                  <Pencil aria-hidden="true" className="h-4 w-4" />
+                </Link>
+              </div>
             ))
           ) : (
             <div className="px-4 py-10 text-center text-sm text-stone-500">

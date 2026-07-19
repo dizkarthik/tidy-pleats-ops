@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
@@ -76,11 +76,20 @@ export default async function CustomerProfilePage({
           Customers
         </Link>
         <section className="rounded-md border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="mb-5">
-            <h1 className="text-2xl font-semibold text-stone-950">
-              {customer.name}
-            </h1>
-            <p className="text-sm text-stone-600">{customer.phoneNumber}</p>
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-semibold text-stone-950">
+                {customer.name}
+              </h1>
+              <p className="text-sm text-stone-600">{customer.phoneNumber}</p>
+            </div>
+            <Link
+              href={`/customers/${customer.id}/edit`}
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-700 hover:bg-stone-50"
+            >
+              <Pencil aria-hidden="true" className="h-4 w-4" />
+              Edit
+            </Link>
           </div>
 
           <dl>

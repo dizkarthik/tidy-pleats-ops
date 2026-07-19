@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, UsersRound } from "lucide-react";
 import { logoutAction } from "@/lib/actions";
 import type { AuthUser } from "@/lib/auth";
 
@@ -17,7 +17,14 @@ export function AppHeader({ user }: AppHeaderProps) {
           </p>
           <p className="truncate text-sm text-stone-600">{user.name}</p>
         </Link>
-        <div className="flex items-center gap-2">
+        <nav className="flex items-center gap-2">
+          <Link
+            href="/customers"
+            className="inline-flex h-10 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-700 hover:bg-stone-50"
+          >
+            <UsersRound aria-hidden="true" className="h-4 w-4" />
+            Customers
+          </Link>
           <Link
             href="/customers/new"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-teal-700 text-white hover:bg-teal-800"
@@ -36,7 +43,7 @@ export function AppHeader({ user }: AppHeaderProps) {
               <LogOut aria-hidden="true" className="h-5 w-5" />
             </button>
           </form>
-        </div>
+        </nav>
       </div>
     </header>
   );
