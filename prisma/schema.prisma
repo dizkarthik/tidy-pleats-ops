@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ReferralSource {
+  INSTAGRAM
+  WHATSAPP_STATUS
+  FACEBOOK
+  GOOGLE
+  WALK_IN
+  OTHER
+}
+
+enum ReferralKind {
+  SOCIAL_MEDIA
+  EXISTING_CUSTOMER
+}
+
+enum UserRole {
+  OWNER
+  SPOUSE
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  username     String    @unique
+  passwordHash String
+  role         UserRole
+  sessions     Session[]
+  createdAt    DateTime  @default(now())
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Customer {
+  id                   String         @id @default(cuid())
+  name                 String
+  phoneNumber          String         @unique
+  location             String?
+  address              String?
+  birthdayDate         DateTime?      @db.Date
+  referralKind         ReferralKind
+  referralSource       ReferralSource?
+  referredByCustomerId String?
+  notes                String?
+  dateAdded            DateTime       @default(now())
+
+  // Referred-by is a linked customer record, not free text, so referral counts
+  // remain accurate and typo-proof in later order/offer phases.
+  referredByCustomer Customer?  @relation("CustomerReferrals", fields: [referredByCustomerId], references: [id], onDelete: SetNull)
+  referrals          Customer[] @relation("CustomerReferrals")
+
+  @@index([name])
+  @@index([phoneNumber])
+  @@index([location])
+  @@index([referredByCustomerId])
+  @@map("customers")
+}
