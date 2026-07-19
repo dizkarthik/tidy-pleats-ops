@@ -581,15 +581,13 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
 
         <section className="space-y-5 rounded-md border border-stone-200 bg-white p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-stone-950">Payment</h2>
-          <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="space-y-2">
             <input type="hidden" name="discountType" value={discountType} />
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-stone-800">
-                Discount
-              </span>
-              <span className="relative block">
+            <span className="text-sm font-medium text-stone-800">Discount</span>
+            <div className="flex min-h-16 items-center gap-3 rounded-full border border-stone-300 bg-white px-4 py-2 focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-100">
+              <div className="relative min-w-0 flex-1">
                 {discountType === "RUPEE" ? (
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
+                  <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-2xl font-medium text-stone-900">
                     ₹
                   </span>
                 ) : null}
@@ -598,41 +596,39 @@ export function OrderForm({ customers: initialCustomers }: OrderFormProps) {
                   value={discountValue}
                   onChange={(event) => setDiscountValue(event.target.value)}
                   inputMode="decimal"
-                  className={`h-11 w-full rounded-md border border-stone-300 bg-white pr-8 text-base outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100 ${
-                    discountType === "RUPEE" ? "pl-8" : "pl-3"
+                  className={`h-12 w-full border-0 bg-transparent text-2xl text-stone-900 outline-none placeholder:text-stone-400 ${
+                    discountType === "RUPEE" ? "pl-7 pr-2" : "pl-0 pr-8"
                   }`}
                 />
                 {discountType === "PERCENT" ? (
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-base font-bold text-stone-500">
+                  <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-2xl font-medium text-stone-500">
                     %
                   </span>
                 ) : null}
-              </span>
-            </label>
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium text-stone-800">
-                Discount Type
-              </legend>
-              <div className="grid h-11 grid-cols-2 overflow-hidden rounded-md border border-stone-300 bg-white">
+              </div>
+              <div
+                className="grid h-12 shrink-0 grid-cols-2 overflow-hidden rounded-full border border-stone-300 bg-stone-50 p-1"
+                aria-label="Discount type"
+              >
                 {[
-                  { value: "PERCENT", label: "%" },
                   { value: "RUPEE", label: "₹" },
+                  { value: "PERCENT", label: "%" },
                 ].map((type) => (
                   <button
                     key={type.value}
                     type="button"
                     onClick={() => setDiscountType(type.value)}
-                    className={`w-14 text-sm font-bold ${
+                    className={`h-10 w-12 rounded-full text-lg font-bold transition-colors ${
                       discountType === type.value
-                        ? "bg-teal-700 text-white"
-                        : "bg-white text-stone-700 hover:bg-stone-50"
+                        ? "bg-lime-300 text-stone-950"
+                        : "text-stone-500 hover:text-stone-900"
                     }`}
                   >
                     {type.label}
                   </button>
                 ))}
               </div>
-            </fieldset>
+            </div>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
