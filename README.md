@@ -11,6 +11,8 @@ The app currently contains Customer Contact Management and Order Management:
 - Create single or multi-saree orders linked to existing customers.
 - Track needed-by date, pickup/drop, saree pleat counts, damage notes, photos, price, discounts, advance paid, and balance due.
 - Search and filter the order list, then open full order details.
+- Track per-saree item status from Booked through Delivered, with status history and WhatsApp update links for Collected/Ready milestones.
+- Dashboard for daily operations: overdue/due-today work, ready items, status counts, weekly revenue, and pending balances.
 - Mobile-first PWA setup with manifest, icons, and service worker.
 
 ## Tech Stack
@@ -79,6 +81,10 @@ The `Customer.referredByCustomerId` field is a self-referencing foreign key inst
 Orders use a single `orders` + `order_items` schema for both Single and Multi order flows. A Single order is one order item with `deliveryType` set to `ONE_TIME`, which keeps reports and later status workflows consistent. Needed-by, pickup/drop, and address are always stored on each `order_items` row; when the UI asks for common delivery details once, those values are copied into every item.
 
 Saree photos are uploaded to Vercel Blob through `BLOB_READ_WRITE_TOKEN`; only the Blob URL is saved in Postgres.
+
+Order item status follows this main sequence: Booked -> Collected -> In Progress -> Quality Check -> Ready -> Delivered. Cancelled is an exception status available from the manual status dropdown. Status is stored per item, not per order, and each change writes an `order_item_status_history` row with the user who made the change. Order-level status badges are derived from the current item statuses.
+
+WhatsApp updates use plain `wa.me` links. They are intentionally shown only at Collected and Ready: one order-level button for one-time delivery once all items reach that milestone, or per-item buttons for multiple delivery.
 
 ## Deployment
 

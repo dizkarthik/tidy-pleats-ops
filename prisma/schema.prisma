@@ -61,6 +61,16 @@ enum PickupDrop {
   PICKUP_AND_DROP
 }
 
+enum OrderItemStatus {
+  BOOKED
+  COLLECTED
+  IN_PROGRESS
+  QUALITY_CHECK
+  READY
+  DELIVERED
+  CANCELLED
+}
+
 model User {
   id           String    @id @default(cuid())
   name         String
@@ -68,6 +78,7 @@ model User {
   passwordHash String
   role         UserRole
   sessions     Session[]
+  statusChanges OrderItemStatusHistory[]
   createdAt    DateTime  @default(now())
 
   @@map("users")
@@ -151,6 +162,9 @@ model OrderItem {
   neededBy           DateTime   @db.Date
   pickupDrop         PickupDrop @default(NO)
   address            String?
+  status             OrderItemStatus @default(BOOKED)
+  statusUpdatedAt    DateTime        @default(now())
+  statusHistory      OrderItemStatusHistory[]
 
   // Needed-by, pickup/drop, and address are always stored per item. For
   // one-time delivery the form collects them once and copies them to each item,
@@ -160,5 +174,22 @@ model OrderItem {
   @@unique([orderId, sareeNumber])
   @@index([neededBy])
   @@index([pickupDrop])
+  @@index([status])
   @@map("order_items")
+}
+
+model OrderItemStatusHistory {
+  id          String          @id @default(cuid())
+  orderItemId String
+  status      OrderItemStatus
+  changedAt   DateTime        @default(now())
+  changedById String
+
+  item      OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  changedBy User      @relation(fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([orderItemId])
+  @@index([changedById])
+  @@index([status])
+  @@map("order_item_status_history")
 }

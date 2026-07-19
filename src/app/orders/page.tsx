@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
@@ -9,6 +10,11 @@ import {
   formatDate,
   formatOrderType,
 } from "@/lib/orders";
+import {
+  getOrderStatusSummary,
+  getStatusBadgeClass,
+  orderItemStatuses,
+} from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +22,8 @@ type OrdersPageProps = {
   searchParams: Promise<{
     q?: string;
     orderType?: string;
+    status?: string;
+    segment?: string;
     from?: string;
     to?: string;
   }>;
@@ -41,28 +49,61 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     params.orderType === "SINGLE" || params.orderType === "MULTI"
       ? params.orderType
       : "";
+  const status = orderItemStatuses.find(
+    (itemStatus) => itemStatus.value === params.status,
+  )?.value;
+  const segment = params.segment ?? "";
   const fromDate = parseDateFilter(params.from);
   const toDate = parseDateFilter(params.to);
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const segmentItemFilter: Prisma.OrderItemWhereInput | undefined =
+    segment === "overdue"
+      ? {
+          neededBy: { lt: todayStart },
+          status: { notIn: ["DELIVERED", "CANCELLED"] },
+        }
+      : segment === "due-today"
+        ? {
+            neededBy: { gte: todayStart, lte: todayEnd },
+            status: { notIn: ["DELIVERED", "CANCELLED"] },
+          }
+        : segment === "ready"
+          ? { status: "READY" }
+          : undefined;
+  const itemFilters: Prisma.OrderItemWhereInput[] = [
+    ...(status ? [{ status }] : []),
+    ...(segmentItemFilter ? [segmentItemFilter] : []),
+    ...(fromDate || toDate
+      ? [
+          {
+            neededBy: {
+              ...(fromDate ? { gte: fromDate } : {}),
+              ...(toDate ? { lte: toDate } : {}),
+            },
+          },
+        ]
+      : []),
+  ];
 
   const orders = await getPrisma().order.findMany({
     where: {
       ...(orderType ? { orderType } : {}),
+      ...(itemFilters.length > 0
+        ? {
+            AND: itemFilters.map((itemFilter) => ({
+              items: { some: itemFilter },
+            })),
+          }
+        : {}),
       ...(query
         ? {
             customer: {
               name: { contains: query, mode: "insensitive" },
-            },
-          }
-        : {}),
-      ...(fromDate || toDate
-        ? {
-            items: {
-              some: {
-                neededBy: {
-                  ...(fromDate ? { gte: fromDate } : {}),
-                  ...(toDate ? { lte: toDate } : {}),
-                },
-              },
             },
           }
         : {}),
@@ -109,7 +150,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </Link>
         </div>
 
-        <form className="mb-4 grid gap-2 rounded-md border border-stone-200 bg-white p-3 sm:grid-cols-[1fr_10rem_9rem_9rem_auto]">
+        <form className="mb-4 grid gap-2 rounded-md border border-stone-200 bg-white p-3 sm:grid-cols-[1fr_10rem_11rem_9rem_9rem_auto]">
+          {segment ? <input type="hidden" name="segment" value={segment} /> : null}
           <label className="relative block">
             <Search
               aria-hidden="true"
@@ -130,6 +172,18 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <option value="">All types</option>
             <option value="SINGLE">Single</option>
             <option value="MULTI">Multi</option>
+          </select>
+          <select
+            name="status"
+            defaultValue={status}
+            className="h-10 rounded-md border border-stone-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+          >
+            <option value="">All statuses</option>
+            {orderItemStatuses.map((itemStatus) => (
+              <option key={itemStatus.value} value={itemStatus.value}>
+                {itemStatus.label}
+              </option>
+            ))}
           </select>
           <input
             name="from"
@@ -154,6 +208,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
           {sortedOrders.length > 0 ? (
             sortedOrders.map((order) => {
+              const statusSummary = getOrderStatusSummary(order.items);
               const totalPrice = order.items.reduce(
                 (sum, item) => sum + numberValue(item.price),
                 0,
@@ -177,11 +232,18 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                       <p className="text-sm font-bold text-stone-950">
                         Order #{order.id} - {order.customer.name}
                       </p>
-                      <p className="mt-1 text-xs text-stone-600">
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(statusSummary.tone)}`}
+                        >
+                          {statusSummary.label}
+                        </span>
+                        <p className="text-xs text-stone-600">
                         {formatOrderType(order.orderType)} - {order.items.length} saree
                         {order.items.length === 1 ? "" : "s"} - Needed{" "}
                         {formatDate(nearestNeededBy)}
-                      </p>
+                        </p>
+                      </div>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-bold text-stone-950">

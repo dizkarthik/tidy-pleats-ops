@@ -92,7 +92,7 @@ export async function createOrderAction(
   _state: OrderActionState,
   formData: FormData,
 ) {
-  await requireUser();
+  const user = await requireUser();
 
   const rawItems = String(formData.get("items") ?? "[]");
   let parsedItems: unknown;
@@ -158,6 +158,12 @@ export async function createOrderAction(
             neededBy: parseDate(item.neededBy),
             pickupDrop: item.pickupDrop,
             address: item.pickupDrop === "NO" ? null : optionalText(item.address),
+            statusHistory: {
+              create: {
+                status: "BOOKED",
+                changedById: user.id,
+              },
+            },
           })),
         },
       },
