@@ -5,11 +5,7 @@ import { OrderFilterControls } from "@/components/order-filter-controls";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
-import {
-  calculateOrderTotals,
-  formatCurrency,
-  formatDate,
-} from "@/lib/orders";
+import { formatDate } from "@/lib/orders";
 import {
   getOrderStatusSummary,
   getStatusBadgeClass,
@@ -39,6 +35,32 @@ function parseDateFilter(value?: string) {
 
 function formatDeliveryMode(value: string) {
   return value === "MULTIPLE" ? "Multi Delivery" : "Single Delivery";
+}
+
+function formatDueIn(value: Date | null | undefined) {
+  if (!value) {
+    return "Due In Not set";
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const deliveryDate = new Date(value);
+  deliveryDate.setHours(0, 0, 0, 0);
+  const dayDifference = Math.round(
+    (deliveryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (dayDifference === 0) {
+    return "Due Today";
+  }
+
+  if (dayDifference < 0) {
+    const daysOverdue = Math.abs(dayDifference);
+
+    return `Overdue by ${daysOverdue} day${daysOverdue === 1 ? "" : "s"}`;
+  }
+
+  return `Due In ${dayDifference} day${dayDifference === 1 ? "" : "s"}`;
 }
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
@@ -119,7 +141,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       items: {
         orderBy: { neededBy: "asc" },
       },
-      payments: true,
     },
     orderBy: { orderDate: "desc" },
   });
@@ -162,7 +183,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             sortedOrders.map((order) => {
               const statusSummary = getOrderStatusSummary(order.items);
               const nearestNeededBy = order.items[0]?.neededBy;
-              const totals = calculateOrderTotals(order);
 
               return (
                 <Link
@@ -186,8 +206,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                       {formatDeliveryMode(order.deliveryType)}
                     </p>
                     <p className="mt-1 text-xs font-medium text-stone-700">
-                      Delivery Date {formatDate(nearestNeededBy)} - Due{" "}
-                      {formatCurrency(totals.balanceDue)}
+                      Delivery Date {formatDate(nearestNeededBy)} -{" "}
+                      {formatDueIn(nearestNeededBy)}
                     </p>
                   </div>
                 </Link>
