@@ -213,26 +213,32 @@ export default async function CustomerProfilePage({
                     >
                       <div className="min-w-0">
                         <div className="flex items-start justify-between gap-3">
-                          <p className="min-w-0 truncate text-sm font-bold text-stone-950">
-                            {customer.name}
-                          </p>
-                          <span
-                            className={`inline-flex h-6 shrink-0 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(
-                              statusSummary.tone,
-                            )}`}
-                          >
-                            {statusSummary.label}
-                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-stone-950">
+                              {customer.name}
+                            </p>
+                            <p className="mt-1 text-xs text-stone-600">
+                              {order.items.length} Saree
+                              {order.items.length === 1 ? "" : "s"} -{" "}
+                              {formatDeliveryMode(order.deliveryType)}
+                            </p>
+                            <p className="mt-1 text-xs font-medium text-stone-700">
+                              Delivery Date {formatDate(nearestNeededBy)}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <span
+                              className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(
+                                statusSummary.tone,
+                              )}`}
+                            >
+                              {statusSummary.label}
+                            </span>
+                            <p className="mt-1 text-xs font-bold text-stone-700">
+                              {formatDueIn(nearestNeededBy)}
+                            </p>
+                          </div>
                         </div>
-                        <p className="mt-1 text-xs text-stone-600">
-                          {order.items.length} Saree
-                          {order.items.length === 1 ? "" : "s"} -{" "}
-                          {formatDeliveryMode(order.deliveryType)}
-                        </p>
-                        <p className="mt-1 text-xs font-medium text-stone-700">
-                          Delivery Date {formatDate(nearestNeededBy)} -{" "}
-                          {formatDueIn(nearestNeededBy)}
-                        </p>
                       </div>
                     </Link>
                   );
