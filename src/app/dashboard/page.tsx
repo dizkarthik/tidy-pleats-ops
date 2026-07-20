@@ -277,7 +277,7 @@ function DashboardSection({
   return (
     <section className="mb-5">
       <h2 className="mb-3 text-lg font-semibold text-stone-950">{title}</h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">{children}</div>
     </section>
   );
 }
@@ -298,10 +298,14 @@ function DashboardCard({
   return (
     <Link
       href={href}
-      className={`rounded-md border bg-white p-4 shadow-sm hover:bg-stone-50 ${getStatusBadgeClass(tone)}`}
+      className={`rounded-md border bg-white p-3 shadow-sm hover:bg-stone-50 sm:p-4 ${getStatusBadgeClass(tone)}`}
     >
-      <p className="text-sm font-bold">{label}</p>
-      <p className="mt-2 text-3xl font-semibold">{value}</p>
+      <p className="min-h-9 text-xs font-bold leading-tight sm:min-h-0 sm:text-sm">
+        {label}
+      </p>
+      <p className="mt-2 break-words text-2xl font-semibold leading-tight sm:text-3xl">
+        {value}
+      </p>
       <p className="mt-1 text-xs opacity-80">{detail}</p>
     </Link>
   );
