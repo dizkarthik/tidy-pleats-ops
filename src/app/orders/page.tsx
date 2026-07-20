@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { OrderFilterControls } from "@/components/order-filter-controls";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
@@ -144,60 +145,14 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </Link>
         </div>
 
-        <form className="mb-4 grid gap-2 rounded-md border border-stone-200 bg-white p-3 sm:grid-cols-[1fr_10rem_11rem_9rem_9rem_auto]">
-          {segment ? <input type="hidden" name="segment" value={segment} /> : null}
-          <label className="relative block">
-            <Search
-              aria-hidden="true"
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500"
-            />
-            <input
-              name="q"
-              defaultValue={query}
-              placeholder="Search customer"
-              className="h-10 w-full rounded-md border border-stone-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-            />
-          </label>
-          <select
-            name="orderType"
-            defaultValue={orderType}
-            className="h-10 rounded-md border border-stone-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-          >
-            <option value="">All types</option>
-            <option value="SINGLE">Single</option>
-            <option value="MULTI">Multi</option>
-          </select>
-          <select
-            name="status"
-            defaultValue={status}
-            className="h-10 rounded-md border border-stone-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-          >
-            <option value="">All statuses</option>
-            {orderItemStatuses.map((itemStatus) => (
-              <option key={itemStatus.value} value={itemStatus.value}>
-                {itemStatus.label}
-              </option>
-            ))}
-          </select>
-          <input
-            name="from"
-            type="date"
-            defaultValue={params.from ?? ""}
-            className="h-10 rounded-md border border-stone-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-          />
-          <input
-            name="to"
-            type="date"
-            defaultValue={params.to ?? ""}
-            className="h-10 rounded-md border border-stone-300 bg-white px-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-          />
-          <button
-            type="submit"
-            className="h-10 rounded-md bg-stone-900 px-3 text-sm font-bold text-white hover:bg-stone-800"
-          >
-            Filter
-          </button>
-        </form>
+        <OrderFilterControls
+          query={query}
+          orderType={orderType}
+          status={status}
+          segment={segment}
+          from={params.from}
+          to={params.to}
+        />
 
         <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
           {sortedOrders.length > 0 ? (
