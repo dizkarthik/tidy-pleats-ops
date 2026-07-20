@@ -16,10 +16,13 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const params = await searchParams;
   const initialQuery = params.q?.trim() ?? "";
 
-  const customers = await getPrisma().customer.findMany({
-    orderBy: [{ name: "asc" }, { dateAdded: "desc" }],
-    take: 100,
-  });
+  const [customers, totalCustomers] = await Promise.all([
+    getPrisma().customer.findMany({
+      orderBy: [{ name: "asc" }, { dateAdded: "desc" }],
+      take: 100,
+    }),
+    getPrisma().customer.count(),
+  ]);
 
   return (
     <>
@@ -27,7 +30,14 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       <main className="mx-auto w-full max-w-5xl px-4 py-5">
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-stone-950">Customers</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold text-stone-950">
+                Customers
+              </h1>
+              <span className="inline-flex h-7 items-center rounded-full border border-teal-200 bg-teal-50 px-2.5 text-sm font-bold text-teal-700">
+                {totalCustomers}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
