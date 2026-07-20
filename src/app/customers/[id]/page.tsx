@@ -4,7 +4,6 @@ import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
-  calculateOrderTotals,
   formatCurrency,
   formatOrderType,
   formatPaymentMethod,
@@ -175,7 +174,6 @@ export default async function CustomerProfilePage({
               {customer.orders.length > 0 ? (
                 customer.orders.map((order) => {
                   const statusSummary = getOrderStatusSummary(order.items);
-                  const totals = calculateOrderTotals(order);
                   const nearestNeededBy = order.items[0]?.neededBy;
 
                   return (
@@ -184,33 +182,23 @@ export default async function CustomerProfilePage({
                       href={`/orders/${order.id}`}
                       className="block border-b border-stone-100 px-3 py-4 last:border-b-0 hover:bg-stone-50"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-stone-950">
-                            Order #{order.id}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <span
-                              className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(
-                                statusSummary.tone,
-                              )}`}
-                            >
-                              {statusSummary.label}
-                            </span>
-                            <p className="text-xs text-stone-600">
-                              {formatOrderType(order.orderType)} -{" "}
-                              {order.items.length} saree
-                              {order.items.length === 1 ? "" : "s"} - Needed{" "}
-                              {formatDate(nearestNeededBy)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-sm font-bold text-stone-950">
-                            {formatCurrency(totals.totalPrice)}
-                          </p>
-                          <p className="text-xs font-bold text-teal-700">
-                            Due {formatCurrency(totals.balanceDue)}
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-stone-950">
+                          Order #{order.id}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(
+                              statusSummary.tone,
+                            )}`}
+                          >
+                            {statusSummary.label}
+                          </span>
+                          <p className="text-xs text-stone-600">
+                            {formatOrderType(order.orderType)} -{" "}
+                            {order.items.length} saree
+                            {order.items.length === 1 ? "" : "s"} - Delivery{" "}
+                            {formatDate(nearestNeededBy)}
                           </p>
                         </div>
                       </div>
