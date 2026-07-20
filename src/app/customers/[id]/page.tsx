@@ -4,8 +4,8 @@ import { AppHeader } from "@/components/app-header";
 import { requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
+  calculateOrderTotals,
   formatCurrency,
-  formatOrderType,
   formatPaymentMethod,
 } from "@/lib/orders";
 import { getOrderStatusSummary, getStatusBadgeClass } from "@/lib/order-status";
@@ -43,6 +43,10 @@ function Detail({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 whitespace-pre-wrap text-sm text-stone-950">{value}</dd>
     </div>
   );
+}
+
+function formatDeliveryMode(value: string) {
+  return value === "MULTIPLE" ? "Multi Delivery" : "Single Delivery";
 }
 
 const tabs = [
@@ -175,6 +179,7 @@ export default async function CustomerProfilePage({
                 customer.orders.map((order) => {
                   const statusSummary = getOrderStatusSummary(order.items);
                   const nearestNeededBy = order.items[0]?.neededBy;
+                  const totals = calculateOrderTotals(order);
 
                   return (
                     <Link
@@ -183,24 +188,27 @@ export default async function CustomerProfilePage({
                       className="block border-b border-stone-100 px-3 py-4 last:border-b-0 hover:bg-stone-50"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-stone-950">
-                          Order #{order.id}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="min-w-0 truncate text-sm font-bold text-stone-950">
+                            {customer.name}
+                          </p>
                           <span
-                            className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(
+                            className={`inline-flex h-6 shrink-0 items-center rounded-md border px-2 text-xs font-bold ${getStatusBadgeClass(
                               statusSummary.tone,
                             )}`}
                           >
                             {statusSummary.label}
                           </span>
-                          <p className="text-xs text-stone-600">
-                            {formatOrderType(order.orderType)} -{" "}
-                            {order.items.length} saree
-                            {order.items.length === 1 ? "" : "s"} - Delivery{" "}
-                            {formatDate(nearestNeededBy)}
-                          </p>
                         </div>
+                        <p className="mt-1 text-xs text-stone-600">
+                          {order.items.length} Saree
+                          {order.items.length === 1 ? "" : "s"} -{" "}
+                          {formatDeliveryMode(order.deliveryType)}
+                        </p>
+                        <p className="mt-1 text-xs font-medium text-stone-700">
+                          Delivery Date {formatDate(nearestNeededBy)} - Due{" "}
+                          {formatCurrency(totals.balanceDue)}
+                        </p>
                       </div>
                     </Link>
                   );
