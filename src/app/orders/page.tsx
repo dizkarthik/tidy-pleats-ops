@@ -134,9 +134,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-stone-950">Orders</h1>
-            <p className="text-sm text-stone-600">
-              {sortedOrders.length} shown
-            </p>
           </div>
           <Link
             href="/orders/new"

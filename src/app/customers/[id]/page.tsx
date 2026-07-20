@@ -85,7 +85,6 @@ export default async function CustomerProfilePage({
               <h1 className="text-2xl font-semibold text-stone-950">
                 {customer.name}
               </h1>
-              <p className="text-sm text-stone-600">{customer.phoneNumber}</p>
             </div>
             <Link
               href={`/customers/${customer.id}/edit`}

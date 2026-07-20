@@ -173,7 +173,6 @@ export default async function DashboardPage() {
       <main className="mx-auto w-full max-w-5xl px-4 py-5">
         <div className="mb-5">
           <h1 className="text-2xl font-semibold text-stone-950">Dashboard</h1>
-          <p className="text-sm text-stone-600">Daily order operations</p>
         </div>
 
         <DashboardSection title="Needs Attention">

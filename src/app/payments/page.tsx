@@ -78,10 +78,6 @@ export default async function PaymentsPage({ searchParams }: PaymentsPageProps) 
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-stone-950">Dues Ledger</h1>
-            <p className="text-sm text-stone-600">
-              {dueOrders.length} order{dueOrders.length === 1 ? "" : "s"} with
-              balance due
-            </p>
           </div>
           <div className="rounded-md border border-stone-200 bg-white px-3 py-2 text-right">
             <p className="text-xs font-bold uppercase text-stone-500">

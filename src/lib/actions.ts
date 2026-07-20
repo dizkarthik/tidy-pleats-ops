@@ -3,17 +3,36 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import { signIn, signOut, requireUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import { referralKinds, referralSources } from "@/lib/referrals";
 
 export type ActionState = {
   error?: string;
+  success?: string;
 };
 
 const referralKindValues = referralKinds.map((kind) => kind.value);
 const referralSourceValues = referralSources.map((source) => source.value);
 const customerSizeValues = ["S", "M", "L", "XL", "XXL"] as const;
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required."),
+    newPassword: z
+      .string()
+      .min(8, "New password must be at least 8 characters."),
+    confirmPassword: z.string().min(1, "Confirm the new password."),
+  })
+  .superRefine((data, context) => {
+    if (data.newPassword !== data.confirmPassword) {
+      context.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "New password and confirmation do not match.",
+      });
+    }
+  });
 
 const customerSchema = z
   .object({
@@ -108,6 +127,42 @@ export async function loginAction(_state: ActionState, formData: FormData) {
 export async function logoutAction() {
   await signOut();
   redirect("/login");
+}
+
+export async function changePasswordAction(
+  _state: ActionState,
+  formData: FormData,
+) {
+  const user = await requireUser();
+  const parsed = passwordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Check the form fields." };
+  }
+
+  const account = await getPrisma().user.findUnique({
+    where: { id: user.id },
+  });
+
+  if (
+    !account ||
+    !(await bcrypt.compare(parsed.data.currentPassword, account.passwordHash))
+  ) {
+    return { error: "Current password is incorrect." };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
+
+  await getPrisma().user.update({
+    where: { id: user.id },
+    data: { passwordHash },
+  });
+
+  return { success: "Password updated." };
 }
 
 export async function createCustomerAction(

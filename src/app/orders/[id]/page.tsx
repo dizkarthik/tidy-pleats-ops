@@ -228,9 +228,6 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                 {statusSummary.label}
               </span>
             </div>
-            <p className="text-sm text-stone-600">
-              {formatDateTime(order.orderDate)}
-            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

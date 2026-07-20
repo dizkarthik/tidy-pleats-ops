@@ -28,7 +28,6 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-stone-950">Customers</h1>
-            <p className="text-sm text-stone-600">All customers</p>
           </div>
           <div className="flex items-center gap-2">
             <Link
