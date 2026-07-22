@@ -2,6 +2,8 @@
 
 Internal operations app for Tidy Pleats, a home-based saree pre-pleating service in Virudhunagar, Tamil Nadu.
 
+For full project handoff details, see [docs/KT.md](docs/KT.md).
+
 The app currently contains Customer Contact Management and Order Management:
 
 - Credential login for two seeded internal users.
