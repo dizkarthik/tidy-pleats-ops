@@ -119,6 +119,40 @@ Rules:
 - `.env.example` is committed as the template.
 - Vercel must have the same production env vars configured.
 - `BLOB_READ_WRITE_TOKEN` is required for saree photo upload.
+- `SESSION_COOKIE_NAME` has a code fallback, but setting it explicitly keeps environments clear.
+
+### Production verification on 2026-07-22
+
+Live Vercel production env vars were checked with `vercel env ls production`.
+
+Present:
+
+- `DATABASE_URL`
+- `DATABASE_POSTGRES_URL`
+- `DATABASE_PRISMA_DATABASE_URL`
+
+Missing:
+
+- `SESSION_COOKIE_NAME`
+- `BLOB_READ_WRITE_TOKEN`
+- `SEED_OWNER_PASSWORD`
+- `SEED_SPOUSE_PASSWORD`
+
+Impact:
+
+- Login still works because `SESSION_COOKIE_NAME` falls back to `tidy_pleats_ops_session`.
+- Saree photo uploads will fail in production until `BLOB_READ_WRITE_TOKEN` is added.
+- The production `owner` and `spouse` users still matched the default seed passwords at verification time. Rotate both passwords immediately from `/account/password`.
+
+Local production env file:
+
+- `.env.production.local` exists on the original development machine.
+- It is gitignored and was not handed off through GitHub.
+- A new maintainer should recreate it from Vercel when needed:
+
+```bash
+npx --yes vercel env pull .env.production.local --environment=production
+```
 
 ## 6. Important Commands
 
@@ -308,6 +342,8 @@ Important migration:
 - Creates `payments`.
 - Backfills old advance paid values into payment records.
 - Drops old order advance columns.
+- Confirmed applied to the production DB via `_prisma_migrations` on 2026-07-22.
+- Production `finished_at`: `2026-07-19 16:19:33.729159+00`.
 
 Do not reintroduce editable payment fields on `orders`. Use `payments`.
 
@@ -849,6 +885,7 @@ Migrations:
 - No audit log for payment edits because payment edits do not exist.
 - `AdvancePaymentMethod` enum name remains from earlier phase, but currently represents payment method CASH/UPI.
 - `/menu5` is a placeholder.
+- `/menu5` has no known business workflow and no bottom-nav entry. It is safe to delete unless a future Settings/Reports page is intentionally assigned to it.
 
 ## 24. Recommended Next Steps
 
@@ -881,4 +918,3 @@ When debugging production:
 3. Check Prisma migration status against production DB.
 4. Verify route is authenticated and session cookie exists.
 5. Inspect server action console logs for caught failures.
-
