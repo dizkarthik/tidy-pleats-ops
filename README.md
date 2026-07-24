@@ -48,6 +48,8 @@ SEED_SPOUSE_PASSWORD="replace-with-a-strong-password"
 
 No real secrets should be committed.
 
+The seed script never resets an existing user's password on re-run — it only sets passwords when creating a user for the first time. To intentionally reset `owner`/`spouse` passwords back to `SEED_OWNER_PASSWORD`/`SEED_SPOUSE_PASSWORD` (or their hardcoded defaults) via the seed script, set `SEED_ALLOW_PASSWORD_RESET="true"` for that run. Never set this against production.
+
 ## Local Development
 
 ```bash
